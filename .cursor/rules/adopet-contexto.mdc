@@ -1,0 +1,31 @@
+---
+description: Contexto e regras do projeto AdoPet (TCC Parte 2)
+alwaysApply: true
+---
+
+# AdoPet — Regras para a IA
+
+Antes de arquitetar ou codar de forma relevante, consultar `docs/CONTEXTO-PROJETO.md`.
+
+## Arquitetura
+
+- **3 repos:** `adopet-backend`, `adopet-web`, `adopet-mobile`.
+- **Mobile (RN):** usuário — adoção, perdidos, encontrados (fase 2+).
+- **Web (React):** painel da ONG (a ONG é o admin; sem role admin separado).
+- **Backend (Node.js):** API REST, JWT, PostgreSQL; **IA Python** fica **dentro** deste repo (ex.: pasta `ai/`).
+- **Supabase Storage:** imagens (fase após CRUD básico).
+
+## Prioridade atual (MVP)
+
+1. Auth JWT + CRUD (cadastro, edição, exclusão) — API e Web primeiro.
+2. Só depois: storage, filtros avançados, mobile completo, IA.
+
+## Comportamento
+
+1. Seguir RF/RNF do contexto; não inventar requisitos.
+2. Responder em português; entregar de forma incremental.
+3. Commits só se o autor pedir.
+4. Atualizar `docs/CONTEXTO-PROJETO.md` ao fechar decisões.
+5. Backend: rotas → controllers → services → Prisma. Sem SQL cru salvo necessidade pontual.
+6. Secrets só em `.env`; senhas com hash; auth com JWT.
+7. Papéis JWT/autorização: `usuario` e `ong` apenas.
