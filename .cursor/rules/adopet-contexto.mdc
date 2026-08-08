@@ -20,6 +20,12 @@ Antes de arquitetar ou codar de forma relevante, consultar `docs/CONTEXTO-PROJET
 1. Auth JWT + CRUD (cadastro, edição, exclusão) — API e Web primeiro.
 2. Só depois: storage, filtros avançados, mobile completo, IA.
 
+## SDD (obrigatório)
+
+- Toda implementação relevante exige spec em `specs/` **antes** do código.
+- Pasta `specs/` existe em cada repo (`adopet-backend`, `adopet-web`, `adopet-mobile`).
+- Não implementar feature sem spec correspondente (salvo correção trivial explícita).
+
 ## Comportamento
 
 1. Seguir RF/RNF do contexto; não inventar requisitos.
@@ -29,3 +35,4 @@ Antes de arquitetar ou codar de forma relevante, consultar `docs/CONTEXTO-PROJET
 5. Backend: rotas → controllers → services → Prisma. Sem SQL cru salvo necessidade pontual.
 6. Secrets só em `.env`; senhas com hash; auth com JWT.
 7. Papéis JWT/autorização: `usuario` e `ong` apenas.
+8. Criar/atualizar spec em `specs/` antes de codar (SDD).

@@ -72,17 +72,52 @@ Cada parte do sistema terá seu próprio repositório Git. Manter este documento
 | `adopet-web` | React — painel da ONG (administração) |
 | `adopet-mobile` | React Native — usuário |
 
-Estrutura sugerida do backend (quando a fase de IA começar):
+Estrutura sugerida (todos os repos):
+
+```
+adopet-*/ 
+├── specs/               # Specs SDD — obrigatório antes de implementar
+├── docs/                # Contexto do projeto (este arquivo)
+├── .cursor/rules/       # Regras para a IA
+└── ...                  # código (src/, app/, ai/, etc.)
+```
+
+Backend:
 
 ```
 adopet-backend/
-├── src/                 # API Node.js
-├── ai/                  # Python — comparação de imagens
+├── specs/
+├── prisma/              # schema.prisma + migrações
+├── src/
+│   ├── db/              # cliente Prisma
+│   ├── middleware/
+│   ├── routes/
+│   ├── services/
+│   ├── app.js
+│   └── server.js
+├── ai/                  # Python — comparação de imagens (fase posterior)
 ├── docs/
 └── ...
 ```
 
+> Camada `controllers/` entra nas specs de feature (auth/CRUD), mantendo rotas → controllers → services → Prisma.
+
 > Este workspace atual (`AdoPetMobile-main`) pode ser o ponto de partida do mobile ou da documentação; ao criar os outros repos, copiar/adaptar `docs/CONTEXTO-PROJETO.md` e `.cursor/rules/`.
+
+### Spec-Driven Development (SDD) — obrigatório
+
+Toda implementação **deve** ter especificação escrita **antes** do código, seguindo SDD.
+
+| Regra | Detalhe |
+|-------|---------|
+| Onde | Pasta `specs/` em **cada** repositório (`adopet-backend`, `adopet-web`, `adopet-mobile`) |
+| Quando | Antes de arquitetar ou codar a feature/fatia |
+| O quê | Objetivo, escopo, RF/RNF, contratos (API/UI), critérios de pronto, fora de escopo |
+| Fluxo | Spec em `specs/` → revisão/alinhamento → implementação → atualizar spec se a decisão mudar |
+
+Convenção sugerida de nomes: `specs/NNN-nome-curto.md` (ex.: `specs/001-auth-jwt.md`).
+
+A IA **não** deve implementar feature sem spec correspondente em `specs/` (salvo correção trivial explícita).
 
 ---
 
@@ -166,34 +201,24 @@ adopet-backend/
 
 ### 4.4 Modelo de dados
 
-O MER da Parte 1 (Figura 11) contempla entidades relacionadas a:
+Fonte: MER da Parte 1 (Figura 11) — print em `docs/mer-figura-11.png`.  
+Implementação: Prisma (`prisma/schema.prisma`) + migration `init` (spec 002).  
+Papel JWT `usuario` | `ong` e campos de auth ficam em migration(s) futuras.
 
-- **Usuários**
-- **Instituições / ONGs**
-- **Animais** (adoção, perdidos, encontrados)
-- **Raças**
-- **Cidades** (localização)
-- **Comparação de imagens / IA** (registros do processo de similaridade)
+| Entidade | PK | Atributos | FKs |
+|----------|----|-----------|-----|
+| Cidade | idCidade | nome(60), endereco(200), uf(2), pais(45) | — |
+| Usuario | idUsuario | nome(150), contato(20), status(1) | idCidade → Cidade |
+| Instituicao | idInstituicao | nome(100) | idCidade → Cidade |
+| Raca | idRaca | nome(60), descricao(200) | — |
+| Animal | idAnimal | nome(80), status(1), descricao(200) | idCidade; idInstituicao? (opcional); idRaca |
+| Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
 
-Atributos citados nos requisitos para **Animal**: nome, espécie, raça, idade, descrição, status, situação, porte, localização, imagens.
+**Relacionamentos 1:N:** Cidade → Usuario, Instituicao, Animal; Instituicao → Animal (FK opcional); Raca → Animal; Animal → Transacao.
 
-#### O que a IA precisa para detalhar as tabelas
+**Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status` `@db.Char(1)`; `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; keys de imagem `VarChar(200)` (URL/ref; blob no Storage depois).
 
-Qualquer **uma** destas opções basta (quanto mais legível, melhor):
-
-1. **Print/foto nítida** do diagrama ER (Figura 11) — anexar no chat ou em `docs/mer.png`
-2. **Lista em texto** por tabela, no formato:
-   ```
-   Tabela: Animal
-   - id (PK)
-   - nome (varchar)
-   - especie_id (FK → Especie)
-   - ...
-   Relacionamentos: Animal N:1 Ong; Animal N:N Imagem; ...
-   ```
-3. **Export** do brModelo / dbdiagram / draw.io / PostgreSQL (`\d` ou script SQL)
-
-Com isso, a seção abaixo será preenchida com PK/FK, tipos e cardinalidade. Até lá, o MVP de CRUD usará um schema mínimo alinhado aos RFs (usuário, ong, animal + campos essenciais).
+**Lacunas vs RFs (próximas migrations):** email/senha em Usuario e Instituicao; em Animal — espécie, idade, porte, situação (adoção/perdido/encontrado), imagens. Atributos citados nos RFs para Animal ainda não estão todos no MER.
 
 ### 4.5 Casos de uso
 
@@ -240,12 +265,14 @@ Com isso, a seção abaixo será preenchida com PK/FK, tipos e cardinalidade. At
 8. Ao fechar decisões (Prisma, JWT, endpoints, schema), **atualizar este arquivo**.
 9. Priorizar alinhamento com RF/RNF da Parte 1.
 10. Tratar RF0008 (IA) como módulo isolado **dentro do backend** — pode vir depois de auth + CRUD + storage no MVP incremental.
+11. **SDD:** criar/atualizar spec em `specs/` **antes** de implementar; toda feature relevante precisa de especificação.
 
 ### Modelo de prompt
 
 ```
 Contexto: seguir docs/CONTEXTO-PROJETO.md e .cursor/rules/
 
+Spec: specs/[arquivo].md (criar/atualizar antes de codar — SDD)
 Tarefa: [o que fazer]
 Escopo: [mobile | web | backend]
 RF/RNF relacionados: [ex.: RF0004, RNF0002]
@@ -331,16 +358,20 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-07-27 | MVP = CRUD (criar/editar/excluir) antes do restante | Decisão do autor |
 | 2026-07-27 | Persistência com **Prisma** (ORM) sobre PostgreSQL | Decisão do autor |
 | 2026-08-02 | Apenas 2 atores: **Usuário** e **ONG** (ONG = admin; sem role admin separado) | Decisão do autor |
+| 2026-08-03 | **SDD** obrigatório: spec em `specs/` antes de cada implementação; pasta em todos os repos | Decisão do autor |
+| 2026-08-03 | Backend: Express + pastas `src/db`, `middleware`, `routes`, `services`; Prisma em `prisma/` | Decisão do autor / scaffold inicial |
+| 2026-08-08 | Schema Prisma = MER Figura 11 (6 entidades); migration `init`; auth/atributos extras depois | Spec 002 / Figura 11 |
 
 ---
 
 ## 9. Pendências
 
-- [ ] Detalhar MER (Figura 11): print, lista de campos ou SQL — ver seção 4.4
+- [x] Detalhar MER (Figura 11): print, lista de campos ou SQL — ver seção 4.4
 - [x] Persistência: Prisma (ORM)
 - [x] Auth: JWT
 - [x] 3 repositórios separados (IA no backend)
 - [x] MVP: CRUD primeiro
+- [x] SDD + pasta `specs/` em cada repositório
 - [ ] Padronizar envelope de resposta da API e códigos de erro
 - [ ] Anexar protótipos/diagramas em `docs/` (opcional)
 
@@ -356,3 +387,6 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-07-27 | Ajuste: `adopet-ai-service` unificado ao `adopet-backend` |
 | 2026-07-27 | Decisão: Prisma como ORM |
 | 2026-08-02 | Atores: Usuário e ONG (ONG é o admin) |
+| 2026-08-03 | SDD obrigatório; pasta `specs/` em backend, web e mobile |
+| 2026-08-03 | Scaffold backend: Express + `src/db|middleware|routes|services` (spec 001) |
+| 2026-08-08 | MER Figura 11 no Prisma + migration `init` (spec 002); §4.4 atualizado |

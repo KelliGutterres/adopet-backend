@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../adopet-mobile"
+		},
+		{
+			"path": "../adopet-web"
+		}
+	],
+	"settings": {}
+}

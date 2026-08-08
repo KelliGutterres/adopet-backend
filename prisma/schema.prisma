@@ -1,0 +1,76 @@
+// Schema alinhado à Figura 11 (MER) — spec 002
+// Auth (email/senha) e atributos extras de Animal: migrations futuras
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cidade {
+  idCidade Int    @id @default(autoincrement())
+  nome     String @db.VarChar(60)
+  endereco String @db.VarChar(200)
+  uf       String @db.VarChar(2)
+  pais     String @db.VarChar(45)
+
+  usuarios     Usuario[]
+  instituicoes Instituicao[]
+  animais      Animal[]
+}
+
+model Usuario {
+  idUsuario Int    @id @default(autoincrement())
+  nome      String @db.VarChar(150)
+  contato   String @db.VarChar(20)
+  status    String @db.Char(1)
+  idCidade  Int
+
+  cidade Cidade @relation(fields: [idCidade], references: [idCidade])
+}
+
+model Instituicao {
+  idInstituicao Int    @id @default(autoincrement())
+  nome          String @db.VarChar(100)
+  idCidade      Int
+
+  cidade  Cidade   @relation(fields: [idCidade], references: [idCidade])
+  animais Animal[]
+}
+
+model Raca {
+  idRaca     Int    @id @default(autoincrement())
+  nome       String @db.VarChar(60)
+  descricao  String @db.VarChar(200)
+
+  animais Animal[]
+}
+
+model Animal {
+  idAnimal      Int     @id @default(autoincrement())
+  nome          String  @db.VarChar(80)
+  status        String  @db.Char(1)
+  descricao     String  @db.VarChar(200)
+  idCidade      Int
+  idInstituicao Int?
+  idRaca        Int
+
+  cidade      Cidade       @relation(fields: [idCidade], references: [idCidade])
+  instituicao Instituicao? @relation(fields: [idInstituicao], references: [idInstituicao])
+  raca        Raca         @relation(fields: [idRaca], references: [idRaca])
+  transacoes  Transacao[]
+}
+
+model Transacao {
+  idTransacao       Int      @id @default(autoincrement())
+  keyImageSent      String   @db.VarChar(200)
+  keyImageCompared  String   @db.VarChar(200)
+  dataBusca         DateTime
+  scoreSimilarity   Decimal  @db.Decimal(5, 4)
+  idAnimal          Int
+
+  animal Animal @relation(fields: [idAnimal], references: [idAnimal])
+}

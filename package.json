@@ -1,0 +1,24 @@
+{
+  "name": "adopet-backend",
+  "version": "1.0.0",
+  "description": "API REST do AdoPet — autenticação JWT, CRUD e orquestração",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "keywords": ["adopet", "api"],
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@prisma/client": "^6.13.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.13.0"
+  }
+}
