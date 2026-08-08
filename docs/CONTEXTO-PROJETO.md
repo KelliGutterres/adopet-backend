@@ -143,7 +143,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 
 ### Backend (Node.js)
 - [ ] API REST centralizando regras de negócio
-- [ ] Auth usuário e ONG; senhas criptografadas (RNF0002)
+- [x] Auth usuário e ONG; senhas criptografadas (RNF0002)
 - [ ] CRUD usuários, instituições/ONGs, animais, etc.
 - [ ] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL)
 - [ ] Integração com serviço Python de comparação de imagens
@@ -203,13 +203,13 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 
 Fonte: MER da Parte 1 (Figura 11) — print em `docs/mer-figura-11.png`.  
 Implementação: Prisma (`prisma/schema.prisma`) + migration `init` (spec 002).  
-Papel JWT `usuario` | `ong` e campos de auth ficam em migration(s) futuras.
+Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003.
 
 | Entidade | PK | Atributos | FKs |
 |----------|----|-----------|-----|
 | Cidade | idCidade | nome(60), endereco(200), uf(2), pais(45) | — |
-| Usuario | idUsuario | nome(150), contato(20), status(1) | idCidade → Cidade |
-| Instituicao | idInstituicao | nome(100) | idCidade → Cidade |
+| Usuario | idUsuario | nome(150), email(150 unique), senha(100 hash), contato(20), status(1) | idCidade → Cidade |
+| Instituicao | idInstituicao | nome(100), email(150 unique), senha(100 hash) | idCidade → Cidade |
 | Raca | idRaca | nome(60), descricao(200) | — |
 | Animal | idAnimal | nome(80), status(1), descricao(200) | idCidade; idInstituicao? (opcional); idRaca |
 | Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
@@ -218,7 +218,7 @@ Papel JWT `usuario` | `ong` e campos de auth ficam em migration(s) futuras.
 
 **Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status` `@db.Char(1)`; `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; keys de imagem `VarChar(200)` (URL/ref; blob no Storage depois).
 
-**Lacunas vs RFs (próximas migrations):** email/senha em Usuario e Instituicao; em Animal — espécie, idade, porte, situação (adoção/perdido/encontrado), imagens. Atributos citados nos RFs para Animal ainda não estão todos no MER.
+**Lacunas vs RFs (próximas migrations):** em Animal — espécie, idade, porte, situação (adoção/perdido/encontrado), imagens. Auth (`email`/`senha`) em Usuario e Instituicao: spec 003.
 
 ### 4.5 Casos de uso
 
@@ -361,6 +361,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-03 | **SDD** obrigatório: spec em `specs/` antes de cada implementação; pasta em todos os repos | Decisão do autor |
 | 2026-08-03 | Backend: Express + pastas `src/db`, `middleware`, `routes`, `services`; Prisma em `prisma/` | Decisão do autor / scaffold inicial |
 | 2026-08-08 | Schema Prisma = MER Figura 11 (6 entidades); migration `init`; auth/atributos extras depois | Spec 002 / Figura 11 |
+| 2026-08-08 | Auth JWT: email/senha em Usuario e Instituicao; papéis via claim; bcryptjs + jsonwebtoken | Spec 003 |
 
 ---
 
@@ -374,6 +375,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] SDD + pasta `specs/` em cada repositório
 - [ ] Padronizar envelope de resposta da API e códigos de erro
 - [ ] Anexar protótipos/diagramas em `docs/` (opcional)
+- [ ] CRUD de animais (API + Web)
+- [ ] Edição de perfil do usuário autenticado
 
 ---
 
@@ -390,3 +393,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-03 | SDD obrigatório; pasta `specs/` em backend, web e mobile |
 | 2026-08-03 | Scaffold backend: Express + `src/db|middleware|routes|services` (spec 001) |
 | 2026-08-08 | MER Figura 11 no Prisma + migration `init` (spec 002); §4.4 atualizado |
+| 2026-08-08 | Auth JWT usuário/ONG (spec 003): migration `auth_fields`, `/auth/*`, middlewares |

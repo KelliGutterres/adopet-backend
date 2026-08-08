@@ -1,5 +1,5 @@
-// Schema alinhado à Figura 11 (MER) — spec 002
-// Auth (email/senha) e atributos extras de Animal: migrations futuras
+// Schema alinhado à Figura 11 (MER) + auth (spec 003)
+// Atributos extras de Animal: migrations futuras
 
 generator client {
   provider = "prisma-client-js"
@@ -25,6 +25,8 @@ model Cidade {
 model Usuario {
   idUsuario Int    @id @default(autoincrement())
   nome      String @db.VarChar(150)
+  email     String @unique @db.VarChar(150)
+  senha     String @db.VarChar(100)
   contato   String @db.VarChar(20)
   status    String @db.Char(1)
   idCidade  Int
@@ -35,6 +37,8 @@ model Usuario {
 model Instituicao {
   idInstituicao Int    @id @default(autoincrement())
   nome          String @db.VarChar(100)
+  email         String @unique @db.VarChar(150)
+  senha         String @db.VarChar(100)
   idCidade      Int
 
   cidade  Cidade   @relation(fields: [idCidade], references: [idCidade])

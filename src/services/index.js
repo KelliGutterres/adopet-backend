@@ -1,3 +1,5 @@
-// Services de domínio (auth, animais, etc.) entram nas próximas specs.
+const authService = require('./auth.service');
 
-module.exports = {};
+module.exports = {
+  authService,
+};
