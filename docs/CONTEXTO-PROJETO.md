@@ -142,12 +142,13 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [ ] Telas de protótipo: login web; cadastro de animal; edição/gerenciamento
 
 ### Backend (Node.js)
-- [ ] API REST centralizando regras de negócio
+- [x] API REST centralizando regras de negócio (scaffold)
 - [x] Auth usuário e ONG; senhas criptografadas (RNF0002)
-- [ ] CRUD usuários, instituições/ONGs, animais, etc.
+- [x] CRUD animais (API — spec 005)
+- [ ] CRUD usuários, instituições/ONGs (além de auth)
 - [ ] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL)
 - [ ] Integração com serviço Python de comparação de imagens
-- [ ] Filtros e listagens conforme RF0004–RF0006
+- [ ] Filtros avançados (RF0005)
 
 ### Serviço de IA (Python — dentro de `adopet-backend`)
 - [ ] Pasta `ai/` (ou similar) no mesmo repositório do backend
@@ -211,14 +212,28 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 | Usuario | idUsuario | nome(150), email(150 unique), senha(100 hash), contato(20), status(1) | idCidade → Cidade |
 | Instituicao | idInstituicao | nome(100), email(150 unique), senha(100 hash) | idCidade → Cidade |
 | Raca | idRaca | nome(60), descricao(200) | — |
-| Animal | idAnimal | nome(80), status(1), descricao(200) | idCidade; idInstituicao? (opcional); idRaca |
+| Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)? | idCidade; idInstituicao?; idUsuario?; idRaca |
 | Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
 
-**Relacionamentos 1:N:** Cidade → Usuario, Instituicao, Animal; Instituicao → Animal (FK opcional); Raca → Animal; Animal → Transacao.
+**Relacionamentos 1:N:** Cidade → Usuario, Instituicao, Animal; Instituicao → Animal (FK opcional); Usuario → Animal (FK opcional); Raca → Animal; Animal → Transacao.
 
-**Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status` `@db.Char(1)`; `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; keys de imagem `VarChar(200)` (URL/ref; blob no Storage depois).
+**Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status`/`porte` `@db.Char(1)`; `idade` `Int?` (anos); `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; keys de imagem `VarChar(200)` (URL/ref; blob no Storage depois).
 
-**Lacunas vs RFs (próximas migrations):** em Animal — espécie, idade, porte, situação (adoção/perdido/encontrado), imagens. Auth (`email`/`senha`) em Usuario e Instituicao: spec 003.
+**Status do Animal** (`Char(1)`):
+
+| Código | Significado |
+|--------|-------------|
+| `E` | Encontrado |
+| `P` | Perdido |
+| `A` | Adoção |
+
+**Espécie / porte (spec 005):** `especie` obrigatória `CAO` \| `GATO`; `porte` opcional `P` \| `M` \| `G`.
+
+**Dono do Animal (spec 005):** criação com JWT — papel `ong` força `idInstituicao`; papel `usuario` força `idUsuario`. Edição/exclusão só pelo dono.
+
+**Seed local** (specs 004/005): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário, 1 ONG, 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`.
+
+**Lacunas vs RFs (próximas migrations):** imagens no Animal (Storage); filtros avançados (RF0005).
 
 ### 4.5 Casos de uso
 
@@ -237,7 +252,7 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 1. Imagens **não** ficam no PostgreSQL como blob; vão ao **Supabase Storage**; o banco guarda **referência/URL**.
 2. Upload/recuperação de imagens passa pelo **backend Node.js** (não expor secrets do Supabase no cliente sem critério).
 3. Comparação de imagens é responsabilidade do **serviço Python**, orquestrado pelo backend.
-4. Status/situação do animal distingue pelo menos: **adoção**, **perdido**, **localizado/encontrado**.
+4. Status/situação do animal (`Char(1)`): **`A`** adoção, **`P`** perdido, **`E`** encontrado.
 5. ONGs e usuários podem manter animais (RF0003), com permissões por papel (`usuario` | `ong`). A ONG é o admin — sem role admin separado.
 6. Senhas devem ser armazenadas com **hash** (nunca texto puro).
 
@@ -362,6 +377,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-03 | Backend: Express + pastas `src/db`, `middleware`, `routes`, `services`; Prisma em `prisma/` | Decisão do autor / scaffold inicial |
 | 2026-08-08 | Schema Prisma = MER Figura 11 (6 entidades); migration `init`; auth/atributos extras depois | Spec 002 / Figura 11 |
 | 2026-08-08 | Auth JWT: email/senha em Usuario e Instituicao; papéis via claim; bcryptjs + jsonwebtoken | Spec 003 |
+| 2026-08-08 | Seed básico local + status Animal `E`/`P`/`A` | Spec 004 |
+| 2026-08-08 | CRUD `/animais`; Animal +`especie`/`idade`/`porte`/`idUsuario`; dono por JWT | Spec 005 |
 
 ---
 
@@ -373,9 +390,11 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] 3 repositórios separados (IA no backend)
 - [x] MVP: CRUD primeiro
 - [x] SDD + pasta `specs/` em cada repositório
+- [x] Seed básico (cidade, ONG, usuário, animais)
 - [ ] Padronizar envelope de resposta da API e códigos de erro
 - [ ] Anexar protótipos/diagramas em `docs/` (opcional)
-- [ ] CRUD de animais (API + Web)
+- [x] CRUD de animais (API — spec 005)
+- [ ] CRUD de animais (painel Web)
 - [ ] Edição de perfil do usuário autenticado
 
 ---
@@ -394,3 +413,5 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-03 | Scaffold backend: Express + `src/db|middleware|routes|services` (spec 001) |
 | 2026-08-08 | MER Figura 11 no Prisma + migration `init` (spec 002); §4.4 atualizado |
 | 2026-08-08 | Auth JWT usuário/ONG (spec 003): migration `auth_fields`, `/auth/*`, middlewares |
+| 2026-08-08 | Seed básico (spec 004); status Animal E/P/A documentado |
+| 2026-08-08 | CRUD animais API (spec 005): `/animais`, campos espécie/idade/porte/`idUsuario` |

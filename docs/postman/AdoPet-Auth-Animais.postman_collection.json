@@ -1,0 +1,185 @@
+{
+  "info": {
+    "name": "AdoPet — Auth + Animais",
+    "description": "Collection local: auth JWT e CRUD /animais (spec 003 + 005).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "idAnimal", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login ONG",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ong@adopet.local\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/ongs/login",
+            "description": "Salva o token na variável de collection automaticamente."
+          }
+        },
+        {
+          "name": "Login Usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@adopet.local\",\n  \"senha\": \"senha123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/usuarios/login"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Animais",
+      "item": [
+        {
+          "name": "Listar animais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/animais"
+          }
+        },
+        {
+          "name": "Listar por status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/animais?status=A",
+              "host": ["{{baseUrl}}"],
+              "path": ["animais"],
+              "query": [{ "key": "status", "value": "A" }]
+            }
+          }
+        },
+        {
+          "name": "Detalhe animal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/animais/{{idAnimal}}"
+          }
+        },
+        {
+          "name": "Cadastrar animal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.animal && json.animal.idAnimal) {",
+                  "  pm.collectionVariables.set('idAnimal', String(json.animal.idAnimal));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Rex\",\n  \"status\": \"A\",\n  \"descricao\": \"Cão dócil para adoção\",\n  \"especie\": \"CAO\",\n  \"idade\": 4,\n  \"porte\": \"G\",\n  \"idCidade\": 1,\n  \"idRaca\": 1\n}"
+            },
+            "url": "{{baseUrl}}/animais"
+          }
+        },
+        {
+          "name": "Editar animal (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Descrição atualizada via PATCH\"\n}"
+            },
+            "url": "{{baseUrl}}/animais/{{idAnimal}}"
+          }
+        },
+        {
+          "name": "Editar animal (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Descrição atualizada via PUT\",\n  \"porte\": \"M\"\n}"
+            },
+            "url": "{{baseUrl}}/animais/{{idAnimal}}"
+          }
+        },
+        {
+          "name": "Excluir animal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/animais/{{idAnimal}}"
+          }
+        }
+      ]
+    }
+  ]
+}

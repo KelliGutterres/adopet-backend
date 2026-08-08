@@ -1,5 +1,4 @@
-// Schema alinhado à Figura 11 (MER) + auth (spec 003)
-// Atributos extras de Animal: migrations futuras
+// Schema alinhado à Figura 11 (MER) + auth (spec 003) + CRUD animais (spec 005)
 
 generator client {
   provider = "prisma-client-js"
@@ -31,7 +30,8 @@ model Usuario {
   status    String @db.Char(1)
   idCidade  Int
 
-  cidade Cidade @relation(fields: [idCidade], references: [idCidade])
+  cidade  Cidade   @relation(fields: [idCidade], references: [idCidade])
+  animais Animal[]
 }
 
 model Instituicao {
@@ -46,9 +46,9 @@ model Instituicao {
 }
 
 model Raca {
-  idRaca     Int    @id @default(autoincrement())
-  nome       String @db.VarChar(60)
-  descricao  String @db.VarChar(200)
+  idRaca    Int    @id @default(autoincrement())
+  nome      String @db.VarChar(60)
+  descricao String @db.VarChar(200)
 
   animais Animal[]
 }
@@ -58,23 +58,28 @@ model Animal {
   nome          String  @db.VarChar(80)
   status        String  @db.Char(1)
   descricao     String  @db.VarChar(200)
+  especie       String  @db.VarChar(40)
+  idade         Int?
+  porte         String? @db.Char(1)
   idCidade      Int
   idInstituicao Int?
+  idUsuario     Int?
   idRaca        Int
 
   cidade      Cidade       @relation(fields: [idCidade], references: [idCidade])
   instituicao Instituicao? @relation(fields: [idInstituicao], references: [idInstituicao])
+  usuario     Usuario?     @relation(fields: [idUsuario], references: [idUsuario])
   raca        Raca         @relation(fields: [idRaca], references: [idRaca])
   transacoes  Transacao[]
 }
 
 model Transacao {
-  idTransacao       Int      @id @default(autoincrement())
-  keyImageSent      String   @db.VarChar(200)
-  keyImageCompared  String   @db.VarChar(200)
-  dataBusca         DateTime
-  scoreSimilarity   Decimal  @db.Decimal(5, 4)
-  idAnimal          Int
+  idTransacao      Int      @id @default(autoincrement())
+  keyImageSent     String   @db.VarChar(200)
+  keyImageCompared String   @db.VarChar(200)
+  dataBusca        DateTime
+  scoreSimilarity  Decimal  @db.Decimal(5, 4)
+  idAnimal         Int
 
   animal Animal @relation(fields: [idAnimal], references: [idAnimal])
 }
