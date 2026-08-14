@@ -1,5 +1,10 @@
 const { prisma } = require('../db');
 const { AppError } = require('../errors/AppError');
+const {
+  findOrCreateCidade,
+  findOrCreateRaca,
+  rejeitarIdsLegados,
+} = require('./localidade.service');
 
 const STATUS_VALIDOS = new Set(['E', 'P', 'A']);
 const ESPECIES_VALIDAS = new Set(['CAO', 'GATO']);
@@ -105,30 +110,6 @@ function validarIdade(idade, { required = false } = {}) {
   return n;
 }
 
-async function garantirCidade(idCidade) {
-  const id = Number(idCidade);
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new AppError('idCidade inválido');
-  }
-  const cidade = await prisma.cidade.findUnique({ where: { idCidade: id } });
-  if (!cidade) {
-    throw new AppError('Cidade não encontrada', 400);
-  }
-  return id;
-}
-
-async function garantirRaca(idRaca) {
-  const id = Number(idRaca);
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new AppError('idRaca inválido');
-  }
-  const raca = await prisma.raca.findUnique({ where: { idRaca: id } });
-  if (!raca) {
-    throw new AppError('Raça não encontrada', 400);
-  }
-  return id;
-}
-
 function vinculoDoAuth(auth) {
   if (auth.papel === 'ong') {
     return { idInstituicao: auth.id, idUsuario: null };
@@ -161,14 +142,15 @@ async function assertDono(idAnimal, auth) {
 }
 
 async function criar(body, auth) {
+  rejeitarIdsLegados(body);
   const nome = requireString(body.nome, 'nome', 80);
   const descricao = requireString(body.descricao, 'descricao', 200);
   const status = validarStatus(body.status);
   const especie = validarEspecie(body.especie);
   const idade = validarIdade(body.idade);
   const porte = validarPorte(body.porte);
-  const idCidade = await garantirCidade(body.idCidade);
-  const idRaca = await garantirRaca(body.idRaca);
+  const cidade = await findOrCreateCidade(body.cidade);
+  const raca = await findOrCreateRaca(body.raca);
   const vinculo = vinculoDoAuth(auth);
 
   const animal = await prisma.animal.create({
@@ -179,8 +161,8 @@ async function criar(body, auth) {
       especie,
       idade,
       porte,
-      idCidade,
-      idRaca,
+      idCidade: cidade.idCidade,
+      idRaca: raca.idRaca,
       ...vinculo,
     },
     include: animalInclude,
@@ -215,6 +197,7 @@ async function buscarPorId(id) {
 }
 
 async function atualizar(id, body, auth) {
+  rejeitarIdsLegados(body);
   const idAnimal = parseId(id);
   await assertDono(idAnimal, auth);
 
@@ -238,11 +221,13 @@ async function atualizar(id, body, auth) {
   if (body.porte !== undefined) {
     data.porte = validarPorte(body.porte);
   }
-  if (body.idCidade !== undefined) {
-    data.idCidade = await garantirCidade(body.idCidade);
+  if (body.cidade !== undefined) {
+    const cidade = await findOrCreateCidade(body.cidade);
+    data.idCidade = cidade.idCidade;
   }
-  if (body.idRaca !== undefined) {
-    data.idRaca = await garantirRaca(body.idRaca);
+  if (body.raca !== undefined) {
+    const raca = await findOrCreateRaca(body.raca);
+    data.idRaca = raca.idRaca;
   }
 
   if (Object.keys(data).length === 0) {

@@ -146,6 +146,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] Auth usuário e ONG; senhas criptografadas (RNF0002)
 - [x] CRUD animais (API — spec 005)
 - [x] Esqueci senha — PUT `/auth/usuarios/senha` e `/auth/ongs/senha` (spec 006)
+- [x] Cidade/raça informadas no cadastro (find-or-create, spec 007)
 - [ ] CRUD usuários, instituições/ONGs (além de auth)
 - [ ] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL)
 - [ ] Integração com serviço Python de comparação de imagens
@@ -205,14 +206,14 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 
 Fonte: MER da Parte 1 (Figura 11) — print em `docs/mer-figura-11.png`.  
 Implementação: Prisma (`prisma/schema.prisma`) + migration `init` (spec 002).  
-Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003. Esqueci senha (MVP TCC, opção A): spec 006 — `PUT /auth/usuarios/senha` e `PUT /auth/ongs/senha` com `{ email, senha }`, público, sem token de e-mail.
+Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003. Esqueci senha (MVP TCC, opção A): spec 006 — `PUT /auth/usuarios/senha` e `PUT /auth/ongs/senha` com `{ email, senha }`, público, sem token de e-mail. Cidade/raça no cadastro (spec 007): body `cidade: { nome, uf }` e, no animal, `raca: { nome }`; find-or-create; **não** enviar `idCidade`/`idRaca`.
 
 | Entidade | PK | Atributos | FKs |
 |----------|----|-----------|-----|
-| Cidade | idCidade | nome(60), endereco(200), uf(2), pais(45) | — |
+| Cidade | idCidade | nome(60), endereco(200), uf(2), pais(45); unique (nome, uf) | — |
 | Usuario | idUsuario | nome(150), email(150 unique), senha(100 hash), contato(20), status(1) | idCidade → Cidade |
 | Instituicao | idInstituicao | nome(100), email(150 unique), senha(100 hash) | idCidade → Cidade |
-| Raca | idRaca | nome(60), descricao(200) | — |
+| Raca | idRaca | nome(60 unique), descricao(200) | — |
 | Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)? | idCidade; idInstituicao?; idUsuario?; idRaca |
 | Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
 
@@ -231,6 +232,8 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 **Espécie / porte (spec 005):** `especie` obrigatória `CAO` \| `GATO`; `porte` opcional `P` \| `M` \| `G`.
 
 **Dono do Animal (spec 005):** criação com JWT — papel `ong` força `idInstituicao`; papel `usuario` força `idUsuario`. Edição/exclusão só pelo dono.
+
+**Cidade / raça no cadastro (spec 007):** o cliente informa texto (`cidade.nome` + `cidade.uf`; no animal também `raca.nome`). A API reutiliza ou cria a linha. `pais` gravado `"Brasil"`; `endereco` gravado `"-"`. Sem painel para cadastrar cidade/raça. `GET /auth/me` não inclui cidade.
 
 **Seed local** (specs 004/005): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário, 1 ONG, 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`.
 
@@ -381,6 +384,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-08 | Seed básico local + status Animal `E`/`P`/`A` | Spec 004 |
 | 2026-08-08 | CRUD `/animais`; Animal +`especie`/`idade`/`porte`/`idUsuario`; dono por JWT | Spec 005 |
 | 2026-08-13 | Esqueci senha: `PUT /auth/usuarios/senha` e `/auth/ongs/senha` (e-mail + senha nova, sem JWT/SMTP) | Spec 006 |
+| 2026-08-13 | Cidade/raça no cadastro: find-or-create `{ nome, uf }` / `{ nome }`; unique; sem `idCidade`/`idRaca` no body | Spec 007 |
 
 ---
 
@@ -397,6 +401,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [ ] Anexar protótipos/diagramas em `docs/` (opcional)
 - [x] CRUD de animais (API — spec 005)
 - [x] Esqueci senha usuário e ONG (API — spec 006)
+- [x] Cidade/raça informadas no cadastro (API — spec 007)
 - [ ] CRUD de animais (painel Web)
 - [ ] Edição de perfil do usuário autenticado
 
@@ -419,3 +424,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-08 | Seed básico (spec 004); status Animal E/P/A documentado |
 | 2026-08-08 | CRUD animais API (spec 005): `/animais`, campos espécie/idade/porte/`idUsuario` |
 | 2026-08-13 | Esqueci senha API (spec 006): PUT `/auth/usuarios/senha` e `/auth/ongs/senha` |
+| 2026-08-13 | Cidade/raça inline (spec 007): find-or-create no cadastro usuário/ONG/animal |

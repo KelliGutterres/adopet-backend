@@ -1,4 +1,4 @@
-// Schema alinhado à Figura 11 (MER) + auth (spec 003) + CRUD animais (spec 005)
+// Schema alinhado à Figura 11 (MER) + auth (003) + CRUD animais (005) + unique cidade/raça (007)
 
 generator client {
   provider = "prisma-client-js"
@@ -19,6 +19,8 @@ model Cidade {
   usuarios     Usuario[]
   instituicoes Instituicao[]
   animais      Animal[]
+
+  @@unique([nome, uf])
 }
 
 model Usuario {
@@ -47,7 +49,7 @@ model Instituicao {
 
 model Raca {
   idRaca    Int    @id @default(autoincrement())
-  nome      String @db.VarChar(60)
+  nome      String @unique @db.VarChar(60)
   descricao String @db.VarChar(200)
 
   animais Animal[]

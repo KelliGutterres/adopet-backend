@@ -2,10 +2,18 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { prisma } = require('../db');
 const { AppError } = require('../errors/AppError');
+const {
+  cidadePublica,
+  cidadePublicaSelect,
+  findOrCreateCidade,
+  rejeitarIdsLegados,
+} = require('./localidade.service');
 
 const BCRYPT_ROUNDS = 10;
 const MIN_SENHA = 6;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const cidadeInclude = { cidade: { select: cidadePublicaSelect } };
 
 const usuarioPublico = (usuario) => ({
   idUsuario: usuario.idUsuario,
@@ -14,6 +22,7 @@ const usuarioPublico = (usuario) => ({
   contato: usuario.contato,
   status: usuario.status,
   idCidade: usuario.idCidade,
+  cidade: cidadePublica(usuario.cidade),
 });
 
 const ongPublica = (instituicao) => ({
@@ -21,6 +30,7 @@ const ongPublica = (instituicao) => ({
   nome: instituicao.nome,
   email: instituicao.email,
   idCidade: instituicao.idCidade,
+  cidade: cidadePublica(instituicao.cidade),
 });
 
 function requireEnv(name) {
@@ -60,21 +70,10 @@ function validarEmailSenha(email, senha) {
   }
 }
 
-async function garantirCidade(idCidade) {
-  const id = Number(idCidade);
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new AppError('idCidade inválido');
-  }
+async function cadastrarUsuario(body) {
+  rejeitarIdsLegados(body);
+  const { nome, email, senha, contato, cidade } = body;
 
-  const cidade = await prisma.cidade.findUnique({ where: { idCidade: id } });
-  if (!cidade) {
-    throw new AppError('Cidade não encontrada', 400);
-  }
-
-  return id;
-}
-
-async function cadastrarUsuario({ nome, email, senha, contato, idCidade }) {
   if (!nome || typeof nome !== 'string' || !nome.trim()) {
     throw new AppError('Nome é obrigatório');
   }
@@ -83,7 +82,7 @@ async function cadastrarUsuario({ nome, email, senha, contato, idCidade }) {
   }
 
   validarEmailSenha(email, senha);
-  const cidadeId = await garantirCidade(idCidade);
+  const cidadeRow = await findOrCreateCidade(cidade);
   const emailNorm = email.trim().toLowerCase();
 
   const existente = await prisma.usuario.findUnique({ where: { email: emailNorm } });
@@ -99,8 +98,9 @@ async function cadastrarUsuario({ nome, email, senha, contato, idCidade }) {
       senha: senhaHash,
       contato: contato.trim(),
       status: 'A',
-      idCidade: cidadeId,
+      idCidade: cidadeRow.idCidade,
     },
+    include: cidadeInclude,
   });
 
   const token = signToken({
@@ -118,7 +118,10 @@ async function loginUsuario({ email, senha }) {
   }
 
   const emailNorm = String(email).trim().toLowerCase();
-  const usuario = await prisma.usuario.findUnique({ where: { email: emailNorm } });
+  const usuario = await prisma.usuario.findUnique({
+    where: { email: emailNorm },
+    include: cidadeInclude,
+  });
   if (!usuario) {
     throw new AppError('Credenciais inválidas', 401);
   }
@@ -137,13 +140,16 @@ async function loginUsuario({ email, senha }) {
   return { usuario: usuarioPublico(usuario), token };
 }
 
-async function cadastrarOng({ nome, email, senha, idCidade }) {
+async function cadastrarOng(body) {
+  rejeitarIdsLegados(body);
+  const { nome, email, senha, cidade } = body;
+
   if (!nome || typeof nome !== 'string' || !nome.trim()) {
     throw new AppError('Nome é obrigatório');
   }
 
   validarEmailSenha(email, senha);
-  const cidadeId = await garantirCidade(idCidade);
+  const cidadeRow = await findOrCreateCidade(cidade);
   const emailNorm = email.trim().toLowerCase();
 
   const existente = await prisma.instituicao.findUnique({ where: { email: emailNorm } });
@@ -157,8 +163,9 @@ async function cadastrarOng({ nome, email, senha, idCidade }) {
       nome: nome.trim(),
       email: emailNorm,
       senha: senhaHash,
-      idCidade: cidadeId,
+      idCidade: cidadeRow.idCidade,
     },
+    include: cidadeInclude,
   });
 
   const token = signToken({
@@ -176,7 +183,10 @@ async function loginOng({ email, senha }) {
   }
 
   const emailNorm = String(email).trim().toLowerCase();
-  const instituicao = await prisma.instituicao.findUnique({ where: { email: emailNorm } });
+  const instituicao = await prisma.instituicao.findUnique({
+    where: { email: emailNorm },
+    include: cidadeInclude,
+  });
   if (!instituicao) {
     throw new AppError('Credenciais inválidas', 401);
   }

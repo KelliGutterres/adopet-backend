@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "AdoPet — Auth + Animais",
-    "description": "Collection local: auth JWT, esqueci senha (spec 006) e CRUD /animais (spec 003 + 005 + 006).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
+    "description": "Collection local: auth JWT, esqueci senha (006), CRUD /animais (005) e cidade/raça inline (007).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -13,6 +13,32 @@
     {
       "name": "Auth",
       "item": [
+        {
+          "name": "Cadastro Usuário",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Silva\",\n  \"email\": \"maria@email.com\",\n  \"senha\": \"senha123\",\n  \"contato\": \"51999999999\",\n  \"cidade\": { \"nome\": \"Estrela\", \"uf\": \"RS\" }\n}"
+            },
+            "url": "{{baseUrl}}/auth/usuarios/cadastro",
+            "description": "Spec 007: cidade find-or-create. Não envie idCidade."
+          }
+        },
+        {
+          "name": "Cadastro ONG",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"ONG Estrela\",\n  \"email\": \"ong.estrela@email.com\",\n  \"senha\": \"senha123\",\n  \"cidade\": { \"nome\": \"Estrela\", \"uf\": \"RS\" }\n}"
+            },
+            "url": "{{baseUrl}}/auth/ongs/cadastro",
+            "description": "Spec 007: reutiliza a mesma cidade se já existir (nome+UF)."
+          }
+        },
         {
           "name": "Login ONG",
           "event": [
@@ -160,7 +186,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Rex\",\n  \"status\": \"A\",\n  \"descricao\": \"Cão dócil para adoção\",\n  \"especie\": \"CAO\",\n  \"idade\": 4,\n  \"porte\": \"G\",\n  \"idCidade\": 1,\n  \"idRaca\": 1\n}"
+              "raw": "{\n  \"nome\": \"Rex\",\n  \"status\": \"A\",\n  \"descricao\": \"Cão dócil para adoção\",\n  \"especie\": \"CAO\",\n  \"idade\": 4,\n  \"porte\": \"G\",\n  \"cidade\": { \"nome\": \"Lajeado\", \"uf\": \"RS\" },\n  \"raca\": { \"nome\": \"SRD\" }\n}"
             },
             "url": "{{baseUrl}}/animais"
           }
@@ -190,7 +216,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"descricao\": \"Descrição atualizada via PUT\",\n  \"porte\": \"M\"\n}"
+              "raw": "{\n  \"descricao\": \"Descrição atualizada via PUT\",\n  \"porte\": \"M\",\n  \"cidade\": { \"nome\": \"Estrela\", \"uf\": \"RS\" }\n}"
             },
             "url": "{{baseUrl}}/animais/{{idAnimal}}"
           }

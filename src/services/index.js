@@ -4,4 +4,5 @@ const animaisService = require('./animais.service');
 module.exports = {
   authService,
   animaisService,
+  localidadeService: require('./localidade.service'),
 };
