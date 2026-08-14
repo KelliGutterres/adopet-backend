@@ -195,11 +195,45 @@ async function loginOng({ email, senha }) {
   return { ong: ongPublica(instituicao), token };
 }
 
+async function redefinirSenhaUsuario({ email, senha }) {
+  validarEmailSenha(email, senha);
+  const emailNorm = email.trim().toLowerCase();
+
+  const usuario = await prisma.usuario.findUnique({ where: { email: emailNorm } });
+  if (!usuario) {
+    throw new AppError('E-mail não encontrado', 404);
+  }
+
+  const senhaHash = await hashSenha(senha);
+  await prisma.usuario.update({
+    where: { idUsuario: usuario.idUsuario },
+    data: { senha: senhaHash },
+  });
+}
+
+async function redefinirSenhaOng({ email, senha }) {
+  validarEmailSenha(email, senha);
+  const emailNorm = email.trim().toLowerCase();
+
+  const instituicao = await prisma.instituicao.findUnique({ where: { email: emailNorm } });
+  if (!instituicao) {
+    throw new AppError('E-mail não encontrado', 404);
+  }
+
+  const senhaHash = await hashSenha(senha);
+  await prisma.instituicao.update({
+    where: { idInstituicao: instituicao.idInstituicao },
+    data: { senha: senhaHash },
+  });
+}
+
 module.exports = {
   cadastrarUsuario,
   loginUsuario,
   cadastrarOng,
   loginOng,
+  redefinirSenhaUsuario,
+  redefinirSenhaOng,
   verifyToken,
   signToken,
 };

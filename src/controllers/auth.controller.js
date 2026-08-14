@@ -44,10 +44,30 @@ function me(req, res) {
   });
 }
 
+async function redefinirSenhaUsuario(req, res, next) {
+  try {
+    await authService.redefinirSenhaUsuario(req.body);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function redefinirSenhaOng(req, res, next) {
+  try {
+    await authService.redefinirSenhaOng(req.body);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   cadastrarUsuario,
   loginUsuario,
   cadastrarOng,
   loginOng,
+  redefinirSenhaUsuario,
+  redefinirSenhaOng,
   me,
 };

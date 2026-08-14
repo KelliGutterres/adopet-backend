@@ -145,6 +145,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] API REST centralizando regras de negócio (scaffold)
 - [x] Auth usuário e ONG; senhas criptografadas (RNF0002)
 - [x] CRUD animais (API — spec 005)
+- [x] Esqueci senha — PUT `/auth/usuarios/senha` e `/auth/ongs/senha` (spec 006)
 - [ ] CRUD usuários, instituições/ONGs (além de auth)
 - [ ] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL)
 - [ ] Integração com serviço Python de comparação de imagens
@@ -204,7 +205,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 
 Fonte: MER da Parte 1 (Figura 11) — print em `docs/mer-figura-11.png`.  
 Implementação: Prisma (`prisma/schema.prisma`) + migration `init` (spec 002).  
-Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003.
+Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003. Esqueci senha (MVP TCC, opção A): spec 006 — `PUT /auth/usuarios/senha` e `PUT /auth/ongs/senha` com `{ email, senha }`, público, sem token de e-mail.
 
 | Entidade | PK | Atributos | FKs |
 |----------|----|-----------|-----|
@@ -379,6 +380,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-08 | Auth JWT: email/senha em Usuario e Instituicao; papéis via claim; bcryptjs + jsonwebtoken | Spec 003 |
 | 2026-08-08 | Seed básico local + status Animal `E`/`P`/`A` | Spec 004 |
 | 2026-08-08 | CRUD `/animais`; Animal +`especie`/`idade`/`porte`/`idUsuario`; dono por JWT | Spec 005 |
+| 2026-08-13 | Esqueci senha: `PUT /auth/usuarios/senha` e `/auth/ongs/senha` (e-mail + senha nova, sem JWT/SMTP) | Spec 006 |
 
 ---
 
@@ -394,6 +396,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [ ] Padronizar envelope de resposta da API e códigos de erro
 - [ ] Anexar protótipos/diagramas em `docs/` (opcional)
 - [x] CRUD de animais (API — spec 005)
+- [x] Esqueci senha usuário e ONG (API — spec 006)
 - [ ] CRUD de animais (painel Web)
 - [ ] Edição de perfil do usuário autenticado
 
@@ -415,3 +418,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-08 | Auth JWT usuário/ONG (spec 003): migration `auth_fields`, `/auth/*`, middlewares |
 | 2026-08-08 | Seed básico (spec 004); status Animal E/P/A documentado |
 | 2026-08-08 | CRUD animais API (spec 005): `/animais`, campos espécie/idade/porte/`idUsuario` |
+| 2026-08-13 | Esqueci senha API (spec 006): PUT `/auth/usuarios/senha` e `/auth/ongs/senha` |

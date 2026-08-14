@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "AdoPet — Auth + Animais",
-    "description": "Collection local: auth JWT e CRUD /animais (spec 003 + 005).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
+    "description": "Collection local: auth JWT, esqueci senha (spec 006) e CRUD /animais (spec 003 + 005 + 006).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -64,6 +64,32 @@
               "raw": "{\n  \"email\": \"usuario@adopet.local\",\n  \"senha\": \"senha123\"\n}"
             },
             "url": "{{baseUrl}}/auth/usuarios/login"
+          }
+        },
+        {
+          "name": "Esqueci senha — Usuário",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@adopet.local\",\n  \"senha\": \"nova123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/usuarios/senha",
+            "description": "Público (sem JWT). Altera o hash da senha do usuário. Depois faça login com a senha nova. Altera a senha do seed."
+          }
+        },
+        {
+          "name": "Esqueci senha — ONG",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ong@adopet.local\",\n  \"senha\": \"nova123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/ongs/senha",
+            "description": "Público (sem JWT). Altera o hash da senha da ONG. Depois faça login com a senha nova. Altera a senha do seed."
           }
         },
         {
