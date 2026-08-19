@@ -135,8 +135,8 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [ ] Telas de protótipo: autenticação/cadastro; listagem de animais
 
 ### Web (ONG = administrador do painel)
-- [ ] Autenticação da ONG (e-mail/senha) — RF0009
-- [ ] Painel de gerenciamento de animais — RF0010
+- [x] Autenticação da ONG (e-mail/senha) — RF0009
+- [x] Listagem de animais no painel (adoção, encontrados, perdidos) — RF0004 / RF0010 parcial (web spec 003)
 - [ ] CRUD de animais para adoção (cadastro, edição, exclusão) — RF0003 / protótipos Fig. 16–17
 - [ ] Gerenciamento de usuários e registros de animais (casos de uso da ONG na Parte 1)
 - [ ] Telas de protótipo: login web; cadastro de animal; edição/gerenciamento
@@ -385,6 +385,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-08 | CRUD `/animais`; Animal +`especie`/`idade`/`porte`/`idUsuario`; dono por JWT | Spec 005 |
 | 2026-08-13 | Esqueci senha: `PUT /auth/usuarios/senha` e `/auth/ongs/senha` (e-mail + senha nova, sem JWT/SMTP) | Spec 006 |
 | 2026-08-13 | Cidade/raça no cadastro: find-or-create `{ nome, uf }` / `{ nome }`; unique; sem `idCidade`/`idRaca` no body | Spec 007 |
+| 2026-08-19 | Painel web: listagem A/P/E (todos os tutores); só leitura; sem gênero/data | Web spec 003 / autora |
 
 ---
 
@@ -402,6 +403,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] CRUD de animais (API — spec 005)
 - [x] Esqueci senha usuário e ONG (API — spec 006)
 - [x] Cidade/raça informadas no cadastro (API — spec 007)
+- [x] Listagem de animais no painel web (web spec 003)
 - [ ] CRUD de animais (painel Web)
 - [ ] Edição de perfil do usuário autenticado
 
@@ -425,3 +427,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-08 | CRUD animais API (spec 005): `/animais`, campos espécie/idade/porte/`idUsuario` |
 | 2026-08-13 | Esqueci senha API (spec 006): PUT `/auth/usuarios/senha` e `/auth/ongs/senha` |
 | 2026-08-13 | Cidade/raça inline (spec 007): find-or-create no cadastro usuário/ONG/animal |
+| 2026-08-19 | Listagem de animais no painel web (web spec 003): sidebar + tabela A/P/E |
