@@ -120,9 +120,9 @@ function vinculoDoAuth(auth) {
   throw new AppError('Papel inválido', 403);
 }
 
-function isDono(animal, auth) {
+function podeMutar(animal, auth) {
   if (auth.papel === 'ong') {
-    return animal.idInstituicao === auth.id;
+    return true;
   }
   if (auth.papel === 'usuario') {
     return animal.idUsuario === auth.id;
@@ -130,12 +130,12 @@ function isDono(animal, auth) {
   return false;
 }
 
-async function assertDono(idAnimal, auth) {
+async function assertPodeMutar(idAnimal, auth) {
   const animal = await prisma.animal.findUnique({ where: { idAnimal } });
   if (!animal) {
     throw new AppError('Animal não encontrado', 404);
   }
-  if (!isDono(animal, auth)) {
+  if (!podeMutar(animal, auth)) {
     throw new AppError('Acesso negado', 403);
   }
   return animal;
@@ -199,7 +199,7 @@ async function buscarPorId(id) {
 async function atualizar(id, body, auth) {
   rejeitarIdsLegados(body);
   const idAnimal = parseId(id);
-  await assertDono(idAnimal, auth);
+  await assertPodeMutar(idAnimal, auth);
 
   const data = {};
 
@@ -243,7 +243,7 @@ async function atualizar(id, body, auth) {
 
 async function excluir(id, auth) {
   const idAnimal = parseId(id);
-  await assertDono(idAnimal, auth);
+  await assertPodeMutar(idAnimal, auth);
 
   const transacoes = await prisma.transacao.count({ where: { idAnimal } });
   if (transacoes > 0) {

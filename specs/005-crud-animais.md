@@ -1,6 +1,7 @@
 # Spec 005 — CRUD de Animais (API)
 
 > **Status:** aprovada e implementada.  
+> Autorização de edição/exclusão: a spec 005 deixou **só o dono**. A spec **008** passa a permitir que papel `ong` edite/exclua **qualquer** animal (usuário continua só o próprio).  
 > Cards Trello:
 > - [Cadastrar Animal → POST /animais](https://trello.com/c/PTuRAaT3/40-cadastrar-animal-post-animais)
 > - [Listar Animais → GET /animais e GET /animais/:id](https://trello.com/c/nK7l5UR4/41-listar-animais-get-animais-e-get-animais-id)

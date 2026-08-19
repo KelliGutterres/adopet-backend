@@ -137,7 +137,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 ### Web (ONG = administrador do painel)
 - [x] Autenticação da ONG (e-mail/senha) — RF0009
 - [x] Listagem de animais no painel (adoção, encontrados, perdidos) — RF0004 / RF0010 parcial (web spec 003)
-- [ ] CRUD de animais para adoção (cadastro, edição, exclusão) — RF0003 / protótipos Fig. 16–17
+- [x] CRUD de animais para adoção (cadastro, edição, exclusão) — RF0003 / protótipos Fig. 16–17 (web spec 007; API spec 008 para ONG admin)
 - [ ] Gerenciamento de usuários e registros de animais (casos de uso da ONG na Parte 1)
 - [ ] Telas de protótipo: login web; cadastro de animal; edição/gerenciamento
 
@@ -147,6 +147,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] CRUD animais (API — spec 005)
 - [x] Esqueci senha — PUT `/auth/usuarios/senha` e `/auth/ongs/senha` (spec 006)
 - [x] Cidade/raça informadas no cadastro (find-or-create, spec 007)
+- [x] ONG (admin) edita/exclui qualquer animal (spec 008)
 - [ ] CRUD usuários, instituições/ONGs (além de auth)
 - [ ] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL)
 - [ ] Integração com serviço Python de comparação de imagens
@@ -231,7 +232,7 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Espécie / porte (spec 005):** `especie` obrigatória `CAO` \| `GATO`; `porte` opcional `P` \| `M` \| `G`.
 
-**Dono do Animal (spec 005):** criação com JWT — papel `ong` força `idInstituicao`; papel `usuario` força `idUsuario`. Edição/exclusão só pelo dono.
+**Dono do Animal (spec 005 + 008):** criação com JWT — papel `ong` força `idInstituicao`; papel `usuario` força `idUsuario`. Edição/exclusão: `usuario` só o próprio; **`ong` (admin do painel) edita/exclui qualquer animal**, sem transferir a posse (spec 008).
 
 **Cidade / raça no cadastro (spec 007):** o cliente informa texto (`cidade.nome` + `cidade.uf`; no animal também `raca.nome`). A API reutiliza ou cria a linha. `pais` gravado `"Brasil"`; `endereco` gravado `"-"`. Sem painel para cadastrar cidade/raça. `GET /auth/me` não inclui cidade.
 
@@ -386,6 +387,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-13 | Esqueci senha: `PUT /auth/usuarios/senha` e `/auth/ongs/senha` (e-mail + senha nova, sem JWT/SMTP) | Spec 006 |
 | 2026-08-13 | Cidade/raça no cadastro: find-or-create `{ nome, uf }` / `{ nome }`; unique; sem `idCidade`/`idRaca` no body | Spec 007 |
 | 2026-08-19 | Painel web: listagem A/P/E (todos os tutores); só leitura; sem gênero/data | Web spec 003 / autora |
+| 2026-08-19 | ONG (papel `ong`) edita/exclui **qualquer** animal; `usuario` só o próprio; edição não transfere dono | Spec 008 / autora |
 
 ---
 
@@ -404,7 +406,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] Esqueci senha usuário e ONG (API — spec 006)
 - [x] Cidade/raça informadas no cadastro (API — spec 007)
 - [x] Listagem de animais no painel web (web spec 003)
-- [ ] CRUD de animais (painel Web)
+- [x] ONG edita/exclui qualquer animal na API (spec 008)
+- [x] CRUD de animais (painel Web — web spec 007)
 - [ ] Edição de perfil do usuário autenticado
 
 ---
@@ -428,3 +431,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-13 | Esqueci senha API (spec 006): PUT `/auth/usuarios/senha` e `/auth/ongs/senha` |
 | 2026-08-13 | Cidade/raça inline (spec 007): find-or-create no cadastro usuário/ONG/animal |
 | 2026-08-19 | Listagem de animais no painel web (web spec 003): sidebar + tabela A/P/E |
+| 2026-08-19 | Spec 008: ONG edita/exclui qualquer animal (`assertPodeMutar`); web spec 007 no painel |
