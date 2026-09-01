@@ -1,13 +1,14 @@
 {
   "info": {
     "name": "AdoPet — Auth + Animais",
-    "description": "Collection local: auth JWT, esqueci senha (006), CRUD /animais (005) e cidade/raça inline (007).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
+    "description": "Collection local: auth JWT, esqueci senha (006), CRUD /animais (005), cidade/raça inline (007) e contas (009).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:3000" },
     { "key": "token", "value": "" },
-    { "key": "idAnimal", "value": "1" }
+    { "key": "idAnimal", "value": "1" },
+    { "key": "idUsuario", "value": "2" }
   ],
   "item": [
     {
@@ -229,6 +230,96 @@
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": "{{baseUrl}}/animais/{{idAnimal}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contas",
+      "item": [
+        {
+          "name": "GET perfil usuário (me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/usuarios/me",
+            "description": "Spec 009. JWT papel usuario. Lê do banco (não do claim)."
+          }
+        },
+        {
+          "name": "PATCH perfil usuário (me)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Usuario Demo Editado\",\n  \"contato\": \"51988888888\",\n  \"cidade\": { \"nome\": \"Estrela\", \"uf\": \"RS\" }\n}"
+            },
+            "url": "{{baseUrl}}/usuarios/me",
+            "description": "Parcial. Sem senha/status. Não devolve token novo."
+          }
+        },
+        {
+          "name": "GET perfil ONG (me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/ongs/me",
+            "description": "JWT papel ong."
+          }
+        },
+        {
+          "name": "PATCH perfil ONG (me)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"ONG Demo Editada\"\n}"
+            },
+            "url": "{{baseUrl}}/ongs/me"
+          }
+        },
+        {
+          "name": "Listar usuários (ONG)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/usuarios",
+            "description": "Só ONG. Sem senha."
+          }
+        },
+        {
+          "name": "Detalhe usuário (ONG)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/usuarios/{{idUsuario}}"
+          }
+        },
+        {
+          "name": "Excluir usuário (ONG)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/usuarios/{{idUsuario}}",
+            "description": "204 se o usuário não tiver animais. 409 se tiver (ex.: seed Usuario Demo / Mel). Não use o id do seed no caminho feliz."
           }
         }
       ]

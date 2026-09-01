@@ -2,36 +2,16 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { prisma } = require('../db');
 const { AppError } = require('../errors/AppError');
+const { findOrCreateCidade, rejeitarIdsLegados } = require('./localidade.service');
 const {
-  cidadePublica,
-  cidadePublicaSelect,
-  findOrCreateCidade,
-  rejeitarIdsLegados,
-} = require('./localidade.service');
+  cidadeInclude,
+  usuarioPublico,
+  ongPublica,
+  validarEmail,
+} = require('./contas.mappers');
 
 const BCRYPT_ROUNDS = 10;
 const MIN_SENHA = 6;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const cidadeInclude = { cidade: { select: cidadePublicaSelect } };
-
-const usuarioPublico = (usuario) => ({
-  idUsuario: usuario.idUsuario,
-  nome: usuario.nome,
-  email: usuario.email,
-  contato: usuario.contato,
-  status: usuario.status,
-  idCidade: usuario.idCidade,
-  cidade: cidadePublica(usuario.cidade),
-});
-
-const ongPublica = (instituicao) => ({
-  idInstituicao: instituicao.idInstituicao,
-  nome: instituicao.nome,
-  email: instituicao.email,
-  idCidade: instituicao.idCidade,
-  cidade: cidadePublica(instituicao.cidade),
-});
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -62,9 +42,7 @@ function verifyToken(token) {
 }
 
 function validarEmailSenha(email, senha) {
-  if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
-    throw new AppError('E-mail inválido');
-  }
+  validarEmail(email);
   if (!senha || typeof senha !== 'string' || senha.length < MIN_SENHA) {
     throw new AppError(`Senha deve ter no mínimo ${MIN_SENHA} caracteres`);
   }

@@ -148,7 +148,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] Esqueci senha — PUT `/auth/usuarios/senha` e `/auth/ongs/senha` (spec 006)
 - [x] Cidade/raça informadas no cadastro (find-or-create, spec 007)
 - [x] ONG (admin) edita/exclui qualquer animal (spec 008)
-- [ ] CRUD usuários, instituições/ONGs (além de auth)
+- [x] Edição de contas (usuário/ONG) + ONG lista/exclui usuários (spec 009)
 - [ ] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL)
 - [ ] Integração com serviço Python de comparação de imagens
 - [ ] Filtros avançados (RF0005)
@@ -207,7 +207,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 
 Fonte: MER da Parte 1 (Figura 11) — print em `docs/mer-figura-11.png`.  
 Implementação: Prisma (`prisma/schema.prisma`) + migration `init` (spec 002).  
-Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003. Esqueci senha (MVP TCC, opção A): spec 006 — `PUT /auth/usuarios/senha` e `PUT /auth/ongs/senha` com `{ email, senha }`, público, sem token de e-mail. Cidade/raça no cadastro (spec 007): body `cidade: { nome, uf }` e, no animal, `raca: { nome }`; find-or-create; **não** enviar `idCidade`/`idRaca`.
+Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003. Esqueci senha (MVP TCC, opção A): spec 006 — `PUT /auth/usuarios/senha` e `PUT /auth/ongs/senha` com `{ email, senha }`, público, sem token de e-mail. Cidade/raça no cadastro (spec 007): body `cidade: { nome, uf }` e, no animal, `raca: { nome }`; find-or-create; **não** enviar `idCidade`/`idRaca`. Contas (spec 009): `GET`/`PUT`/`PATCH /usuarios/me` (papel `usuario`) e `/ongs/me` (papel `ong`); `GET /usuarios` e `DELETE /usuarios/:id` só `ong`. Edição: nome, e-mail, contato (só usuário), cidade inline. Sem senha no perfil. Hard delete; **409** se o usuário tiver animais. `GET /auth/me` inalterado `{ id, papel, email }`. Login **não** checa `Usuario.status`.
 
 | Entidade | PK | Atributos | FKs |
 |----------|----|-----------|-----|
@@ -388,6 +388,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-13 | Cidade/raça no cadastro: find-or-create `{ nome, uf }` / `{ nome }`; unique; sem `idCidade`/`idRaca` no body | Spec 007 |
 | 2026-08-19 | Painel web: listagem A/P/E (todos os tutores); só leitura; sem gênero/data | Web spec 003 / autora |
 | 2026-08-19 | ONG (papel `ong`) edita/exclui **qualquer** animal; `usuario` só o próprio; edição não transfere dono | Spec 008 / autora |
+| 2026-08-31 | Edição de contas em `/usuarios/me` e `/ongs/me`; ONG lista/exclui usuários (409 se houver animais); sem senha no perfil | Spec 009 / autora |
 
 ---
 
@@ -408,7 +409,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] Listagem de animais no painel web (web spec 003)
 - [x] ONG edita/exclui qualquer animal na API (spec 008)
 - [x] CRUD de animais (painel Web — web spec 007)
-- [ ] Edição de perfil do usuário autenticado
+- [x] Edição de contas + ONG lista/exclui usuários (API — spec 009)
+- [ ] Telas de perfil (mobile) e gerenciamento de usuários (web)
 
 ---
 
@@ -432,3 +434,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-13 | Cidade/raça inline (spec 007): find-or-create no cadastro usuário/ONG/animal |
 | 2026-08-19 | Listagem de animais no painel web (web spec 003): sidebar + tabela A/P/E |
 | 2026-08-19 | Spec 008: ONG edita/exclui qualquer animal (`assertPodeMutar`); web spec 007 no painel |
+| 2026-08-31 | Spec 009: edição `/usuarios/me` e `/ongs/me`; ONG `GET`/`DELETE /usuarios` |
