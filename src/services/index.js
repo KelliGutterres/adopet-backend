@@ -9,4 +9,5 @@ module.exports = {
   usuariosService,
   ongsService,
   localidadeService: require('./localidade.service'),
+  storageService: require('./storage.service'),
 };

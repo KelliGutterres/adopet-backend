@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "AdoPet — Auth + Animais",
-    "description": "Collection local: auth JWT, esqueci senha (006), CRUD /animais (005), cidade/raça inline (007) e contas (009).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
+    "description": "Collection local: auth JWT, esqueci senha (006), CRUD /animais (005), cidade/raça inline (007), contas (009) e Storage (010).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -220,6 +220,39 @@
               "raw": "{\n  \"descricao\": \"Descrição atualizada via PUT\",\n  \"porte\": \"M\",\n  \"cidade\": { \"nome\": \"Estrela\", \"uf\": \"RS\" }\n}"
             },
             "url": "{{baseUrl}}/animais/{{idAnimal}}"
+          }
+        },
+        {
+          "name": "Enviar imagem do animal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "imagem",
+                  "type": "file",
+                  "src": [],
+                  "description": "Spec 010. Campo obrigatório: imagem. JPEG, PNG ou WebP até 8 MB."
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/animais/{{idAnimal}}/imagem",
+            "description": "JWT + dono (ou ONG). Substitui a foto anterior. Não envie urlImagem no JSON do PATCH."
+          }
+        },
+        {
+          "name": "Remover imagem do animal",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/animais/{{idAnimal}}/imagem",
+            "description": "204 mesmo se o animal não tiver foto."
           }
         },
         {

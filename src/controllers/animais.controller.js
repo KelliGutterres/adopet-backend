@@ -45,10 +45,34 @@ async function excluir(req, res, next) {
   }
 }
 
+async function enviarImagem(req, res, next) {
+  try {
+    const animal = await animaisService.enviarImagem(
+      req.params.id,
+      req.file,
+      req.auth
+    );
+    res.status(200).json({ animal });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function removerImagem(req, res, next) {
+  try {
+    await animaisService.removerImagem(req.params.id, req.auth);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   criar,
   listar,
   buscarPorId,
   atualizar,
   excluir,
+  enviarImagem,
+  removerImagem,
 };

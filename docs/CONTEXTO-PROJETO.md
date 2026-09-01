@@ -149,7 +149,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] Cidade/raça informadas no cadastro (find-or-create, spec 007)
 - [x] ONG (admin) edita/exclui qualquer animal (spec 008)
 - [x] Edição de contas (usuário/ONG) + ONG lista/exclui usuários (spec 009)
-- [ ] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL)
+- [x] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL) — spec 010
 - [ ] Integração com serviço Python de comparação de imagens
 - [ ] Filtros avançados (RF0005)
 
@@ -215,12 +215,12 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 | Usuario | idUsuario | nome(150), email(150 unique), senha(100 hash), contato(20), status(1) | idCidade → Cidade |
 | Instituicao | idInstituicao | nome(100), email(150 unique), senha(100 hash) | idCidade → Cidade |
 | Raca | idRaca | nome(60 unique), descricao(200) | — |
-| Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)? | idCidade; idInstituicao?; idUsuario?; idRaca |
+| Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)?, urlImagem(500)? | idCidade; idInstituicao?; idUsuario?; idRaca |
 | Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
 
 **Relacionamentos 1:N:** Cidade → Usuario, Instituicao, Animal; Instituicao → Animal (FK opcional); Usuario → Animal (FK opcional); Raca → Animal; Animal → Transacao.
 
-**Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status`/`porte` `@db.Char(1)`; `idade` `Int?` (anos); `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; keys de imagem `VarChar(200)` (URL/ref; blob no Storage depois).
+**Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status`/`porte` `@db.Char(1)`; `idade` `Int?` (anos); `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; `Transacao` keys de imagem `VarChar(200)`; foto do animal `urlImagem` `VarChar(500)?` (URL pública do Storage; blob no bucket).
 
 **Status do Animal** (`Char(1)`):
 
@@ -236,9 +236,11 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Cidade / raça no cadastro (spec 007):** o cliente informa texto (`cidade.nome` + `cidade.uf`; no animal também `raca.nome`). A API reutiliza ou cria a linha. `pais` gravado `"Brasil"`; `endereco` gravado `"-"`. Sem painel para cadastrar cidade/raça. `GET /auth/me` não inclui cidade.
 
-**Seed local** (specs 004/005): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário, 1 ONG, 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`.
+**Foto do animal (spec 010):** uma por animal, opcional. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Telas web/mobile ficam para specs seguintes.
 
-**Lacunas vs RFs (próximas migrations):** imagens no Animal (Storage); filtros avançados (RF0005).
+**Seed local** (specs 004/005): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário, 1 ONG, 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`. Animais do seed **sem** foto (`urlImagem` null).
+
+**Lacunas vs RFs (próximas):** filtros avançados (RF0005); upload/câmera nos clientes (RF0007); IA (RF0008).
 
 ### 4.5 Casos de uso
 
@@ -389,6 +391,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-19 | Painel web: listagem A/P/E (todos os tutores); só leitura; sem gênero/data | Web spec 003 / autora |
 | 2026-08-19 | ONG (papel `ong`) edita/exclui **qualquer** animal; `usuario` só o próprio; edição não transfere dono | Spec 008 / autora |
 | 2026-08-31 | Edição de contas em `/usuarios/me` e `/ongs/me`; ONG lista/exclui usuários (409 se houver animais); sem senha no perfil | Spec 009 / autora |
+| 2026-09-01 | Storage: uma foto por animal; `urlImagem`; `POST`/`DELETE /animais/:id/imagem`; campo `imagem`; 8 MB; Secret só no Node | Spec 010 / autora |
 
 ---
 
@@ -410,7 +413,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] ONG edita/exclui qualquer animal na API (spec 008)
 - [x] CRUD de animais (painel Web — web spec 007)
 - [x] Edição de contas + ONG lista/exclui usuários (API — spec 009)
-- [ ] Telas de perfil (mobile) e gerenciamento de usuários (web)
+- [x] Supabase Storage — foto do animal (API — spec 010)
+- [ ] Telas de foto (web e mobile) + câmera (RF0007)
 
 ---
 
@@ -435,3 +439,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-19 | Listagem de animais no painel web (web spec 003): sidebar + tabela A/P/E |
 | 2026-08-19 | Spec 008: ONG edita/exclui qualquer animal (`assertPodeMutar`); web spec 007 no painel |
 | 2026-08-31 | Spec 009: edição `/usuarios/me` e `/ongs/me`; ONG `GET`/`DELETE /usuarios` |
+| 2026-09-01 | Spec 010: Storage (`urlImagem`, `POST`/`DELETE /animais/:id/imagem`, campo `imagem`, 8 MB) |

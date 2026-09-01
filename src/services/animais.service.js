@@ -5,6 +5,7 @@ const {
   findOrCreateRaca,
   rejeitarIdsLegados,
 } = require('./localidade.service');
+const { uploadImagemAnimal, removerObjeto } = require('./storage.service');
 
 const STATUS_VALIDOS = new Set(['E', 'P', 'A']);
 const ESPECIES_VALIDAS = new Set(['CAO', 'GATO']);
@@ -130,6 +131,17 @@ function podeMutar(animal, auth) {
   return false;
 }
 
+function rejeitarCamposImagemNoJson(body = {}) {
+  if (body.urlImagem !== undefined) {
+    throw new AppError(
+      'urlImagem não é aceito neste endpoint; envie a foto em POST /animais/:id/imagem'
+    );
+  }
+  if (body.keyImagem !== undefined) {
+    throw new AppError('keyImagem não é aceito');
+  }
+}
+
 async function assertPodeMutar(idAnimal, auth) {
   const animal = await prisma.animal.findUnique({ where: { idAnimal } });
   if (!animal) {
@@ -143,6 +155,7 @@ async function assertPodeMutar(idAnimal, auth) {
 
 async function criar(body, auth) {
   rejeitarIdsLegados(body);
+  rejeitarCamposImagemNoJson(body);
   const nome = requireString(body.nome, 'nome', 80);
   const descricao = requireString(body.descricao, 'descricao', 200);
   const status = validarStatus(body.status);
@@ -198,6 +211,7 @@ async function buscarPorId(id) {
 
 async function atualizar(id, body, auth) {
   rejeitarIdsLegados(body);
+  rejeitarCamposImagemNoJson(body);
   const idAnimal = parseId(id);
   await assertPodeMutar(idAnimal, auth);
 
@@ -243,14 +257,47 @@ async function atualizar(id, body, auth) {
 
 async function excluir(id, auth) {
   const idAnimal = parseId(id);
-  await assertPodeMutar(idAnimal, auth);
+  const animal = await assertPodeMutar(idAnimal, auth);
 
   const transacoes = await prisma.transacao.count({ where: { idAnimal } });
   if (transacoes > 0) {
     throw new AppError('Animal possui transações vinculadas e não pode ser excluído', 409);
   }
 
+  const urlAntiga = animal.urlImagem;
   await prisma.animal.delete({ where: { idAnimal } });
+  await removerObjeto(urlAntiga);
+}
+
+async function enviarImagem(id, file, auth) {
+  const idAnimal = parseId(id);
+  const animal = await assertPodeMutar(idAnimal, auth);
+
+  if (!file || !file.buffer || file.size === 0) {
+    throw new AppError('imagem é obrigatório');
+  }
+
+  const urlImagem = await uploadImagemAnimal(idAnimal, file);
+  const atualizado = await prisma.animal.update({
+    where: { idAnimal },
+    data: { urlImagem },
+    include: animalInclude,
+  });
+  await removerObjeto(animal.urlImagem);
+  return atualizado;
+}
+
+async function removerImagem(id, auth) {
+  const idAnimal = parseId(id);
+  const animal = await assertPodeMutar(idAnimal, auth);
+
+  if (animal.urlImagem) {
+    await prisma.animal.update({
+      where: { idAnimal },
+      data: { urlImagem: null },
+    });
+    await removerObjeto(animal.urlImagem);
+  }
 }
 
 module.exports = {
@@ -259,4 +306,6 @@ module.exports = {
   buscarPorId,
   atualizar,
   excluir,
+  enviarImagem,
+  removerImagem,
 };

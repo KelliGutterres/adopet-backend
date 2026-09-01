@@ -2,6 +2,7 @@ const { Router } = require('express');
 const animaisController = require('../controllers/animais.controller');
 const { authenticate } = require('../middleware/authenticate');
 const { authorize } = require('../middleware/authorize');
+const { uploadImagem } = require('../middleware/uploadImagem');
 
 const router = Router();
 
@@ -13,6 +14,21 @@ router.post(
   authenticate,
   authorize('ong', 'usuario'),
   animaisController.criar
+);
+
+router.post(
+  '/:id/imagem',
+  authenticate,
+  authorize('ong', 'usuario'),
+  uploadImagem,
+  animaisController.enviarImagem
+);
+
+router.delete(
+  '/:id/imagem',
+  authenticate,
+  authorize('ong', 'usuario'),
+  animaisController.removerImagem
 );
 
 router.put(
