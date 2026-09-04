@@ -130,7 +130,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [ ] Listagem: adoção, perdidos, localizados/encontrados — RF0004
 - [ ] Filtros: situação, espécie, porte, idade, localização, status — RF0005
 - [ ] Detalhes do animal (fotos, descrição, localização) — RF0006
-- [ ] Upload por galeria ou câmera — RF0007
+- [x] Upload por galeria ou câmera — RF0007 (mobile spec 012; web spec 011)
 - [ ] Comparação inteligente de imagens — RF0008
 - [ ] Telas de protótipo: autenticação/cadastro; listagem de animais
 
@@ -236,11 +236,11 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Cidade / raça no cadastro (spec 007):** o cliente informa texto (`cidade.nome` + `cidade.uf`; no animal também `raca.nome`). A API reutiliza ou cria a linha. `pais` gravado `"Brasil"`; `endereco` gravado `"-"`. Sem painel para cadastrar cidade/raça. `GET /auth/me` não inclui cidade.
 
-**Foto do animal (spec 010):** uma por animal, opcional. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Telas web/mobile ficam para specs seguintes.
+**Foto do animal (spec 010 + mobile 012 + web 011):** uma por animal, opcional na API. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Mobile (spec 012) e painel web (spec 011): cadastro exige foto no front e sempre chama as duas rotas; conversão JPEG no cliente.
 
 **Seed local** (specs 004/005): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário, 1 ONG, 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`. Animais do seed **sem** foto (`urlImagem` null).
 
-**Lacunas vs RFs (próximas):** filtros avançados (RF0005); upload/câmera nos clientes (RF0007); IA (RF0008).
+**Lacunas vs RFs (próximas):** filtros avançados (RF0005); upload de foto no painel web; IA (RF0008).
 
 ### 4.5 Casos de uso
 
@@ -332,7 +332,7 @@ Critério de pronto: [comportamento verificável]
 ### Mobile (React Native)
 - Organização por feature quando possível.
 - Loading, empty state e erro em listas.
-- Câmera/galeria para RF0007.
+- Câmera/galeria para RF0007 (mobile spec 012; painel web spec 011).
 
 ### IA (Python, pasta dentro do backend)
 - Endpoint(s) claros de comparação; contrato JSON documentado.
@@ -392,6 +392,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-19 | ONG (papel `ong`) edita/exclui **qualquer** animal; `usuario` só o próprio; edição não transfere dono | Spec 008 / autora |
 | 2026-08-31 | Edição de contas em `/usuarios/me` e `/ongs/me`; ONG lista/exclui usuários (409 se houver animais); sem senha no perfil | Spec 009 / autora |
 | 2026-09-01 | Storage: uma foto por animal; `urlImagem`; `POST`/`DELETE /animais/:id/imagem`; campo `imagem`; 8 MB; Secret só no Node | Spec 010 / autora |
+| 2026-09-01 | Mobile: upload/câmera da foto do animal (spec 012); cadastro P/E exige foto no front; JPEG no cliente; web ainda sem card Fotos | Mobile spec 012 / autora |
+| 2026-09-03 | Web: upload/captura da foto do animal no painel (spec 011); uma foto; obrigatória no cadastro (front); JPEG no canvas | Web spec 011 / autora |
 
 ---
 
@@ -414,7 +416,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] CRUD de animais (painel Web — web spec 007)
 - [x] Edição de contas + ONG lista/exclui usuários (API — spec 009)
 - [x] Supabase Storage — foto do animal (API — spec 010)
-- [ ] Telas de foto (web e mobile) + câmera (RF0007)
+- [x] Upload/câmera no mobile (mobile spec 012 — RF0007)
+- [x] Card de fotos no painel web (web spec 011 — RF0007)
 
 ---
 
@@ -440,3 +443,5 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-08-19 | Spec 008: ONG edita/exclui qualquer animal (`assertPodeMutar`); web spec 007 no painel |
 | 2026-08-31 | Spec 009: edição `/usuarios/me` e `/ongs/me`; ONG `GET`/`DELETE /usuarios` |
 | 2026-09-01 | Spec 010: Storage (`urlImagem`, `POST`/`DELETE /animais/:id/imagem`, campo `imagem`, 8 MB) |
+| 2026-09-01 | Mobile spec 012: upload/câmera da foto do animal (RF0007 no app); web ainda sem card Fotos |
+| 2026-09-03 | Web spec 011: upload/captura da foto do animal no painel (RF0007 web); cadastro exige foto no front |
