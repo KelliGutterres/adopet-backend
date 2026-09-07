@@ -26,6 +26,7 @@ const SEED = {
   ong: {
     nome: 'ONG AdoPet Demo',
     email: 'ong@adopet.local',
+    contato: '51888888888',
   },
   animaisOng: [
     {
@@ -119,6 +120,7 @@ async function ensureOng(idCidade, senhaHash) {
       where: { email: SEED.ong.email },
       data: {
         nome: SEED.ong.nome,
+        contato: SEED.ong.contato,
         senha: senhaHash,
         idCidade,
       },

@@ -1,4 +1,4 @@
-// Schema alinhado à Figura 11 (MER) + auth (003) + CRUD animais (005) + unique cidade/raça (007) + urlImagem (010)
+// Schema alinhado à Figura 11 (MER) + auth (003) + CRUD animais (005) + unique cidade/raça (007) + urlImagem (010) + contato ONG (011)
 
 generator client {
   provider = "prisma-client-js"
@@ -37,10 +37,11 @@ model Usuario {
 }
 
 model Instituicao {
-  idInstituicao Int    @id @default(autoincrement())
-  nome          String @db.VarChar(100)
-  email         String @unique @db.VarChar(150)
-  senha         String @db.VarChar(100)
+  idInstituicao Int     @id @default(autoincrement())
+  nome          String  @db.VarChar(100)
+  email         String  @unique @db.VarChar(150)
+  senha         String  @db.VarChar(100)
+  contato       String? @db.VarChar(20)
   idCidade      Int
 
   cidade  Cidade   @relation(fields: [idCidade], references: [idCidade])

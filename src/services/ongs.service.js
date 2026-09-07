@@ -27,7 +27,7 @@ async function buscarMe(auth) {
 
 async function atualizarMe(body = {}, auth) {
   rejeitarIdsLegados(body);
-  rejeitarCamposProibidos(body, ['contato']);
+  rejeitarCamposProibidos(body);
   await carregarOng(auth.id);
 
   const data = {};
@@ -43,6 +43,11 @@ async function atualizarMe(body = {}, auth) {
       throw new AppError('E-mail já cadastrado', 409);
     }
     data.email = emailNorm;
+  }
+
+  const contato = optionalTrimmedString(body.contato, 'contato', 20);
+  if (contato !== undefined) {
+    data.contato = contato;
   }
 
   if (body.cidade !== undefined) {

@@ -29,12 +29,14 @@ const animalInclude = {
     select: {
       idInstituicao: true,
       nome: true,
+      contato: true,
     },
   },
   usuario: {
     select: {
       idUsuario: true,
       nome: true,
+      contato: true,
     },
   },
 };

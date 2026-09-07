@@ -120,10 +120,17 @@ async function loginUsuario({ email, senha }) {
 
 async function cadastrarOng(body) {
   rejeitarIdsLegados(body);
-  const { nome, email, senha, cidade } = body;
+  const { nome, email, senha, contato, cidade } = body;
 
   if (!nome || typeof nome !== 'string' || !nome.trim()) {
     throw new AppError('Nome é obrigatório');
+  }
+  if (!contato || typeof contato !== 'string' || !contato.trim()) {
+    throw new AppError('Contato é obrigatório');
+  }
+  const contatoTrim = contato.trim();
+  if (contatoTrim.length > 20) {
+    throw new AppError('contato deve ter no máximo 20 caracteres');
   }
 
   validarEmailSenha(email, senha);
@@ -141,6 +148,7 @@ async function cadastrarOng(body) {
       nome: nome.trim(),
       email: emailNorm,
       senha: senhaHash,
+      contato: contatoTrim,
       idCidade: cidadeRow.idCidade,
     },
     include: cidadeInclude,

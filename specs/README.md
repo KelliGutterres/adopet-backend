@@ -25,3 +25,4 @@ Ver `docs/CONTEXTO-PROJETO.md` (seção SDD).
 | [008](./008-ong-admin-animais.md) | ONG edita/exclui qualquer animal | aprovada e implementada |
 | [009](./009-edicao-contas.md) | Edição de contas + ONG exclui usuários | aprovada e implementada |
 | [010](./010-storage-imagens.md) | Supabase Storage (foto do animal) | aprovada e implementada |
+| [011](./011-contato-whatsapp-animal.md) | Contato WhatsApp do responsável (`contato` no GET de animais + na ONG) | aprovada e implementada |

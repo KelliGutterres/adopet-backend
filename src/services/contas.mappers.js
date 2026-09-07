@@ -19,6 +19,7 @@ const ongPublica = (instituicao) => ({
   idInstituicao: instituicao.idInstituicao,
   nome: instituicao.nome,
   email: instituicao.email,
+  contato: instituicao.contato ?? null,
   idCidade: instituicao.idCidade,
   cidade: cidadePublica(instituicao.cidade),
 });

@@ -150,6 +150,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] ONG (admin) edita/exclui qualquer animal (spec 008)
 - [x] Edição de contas (usuário/ONG) + ONG lista/exclui usuários (spec 009)
 - [x] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL) — spec 010
+- [x] Contato WhatsApp do responsável (`contato` no GET de animais + na ONG) — spec 011
 - [ ] Integração com serviço Python de comparação de imagens
 - [ ] Filtros avançados (RF0005)
 
@@ -207,13 +208,13 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 
 Fonte: MER da Parte 1 (Figura 11) — print em `docs/mer-figura-11.png`.  
 Implementação: Prisma (`prisma/schema.prisma`) + migration `init` (spec 002).  
-Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003. Esqueci senha (MVP TCC, opção A): spec 006 — `PUT /auth/usuarios/senha` e `PUT /auth/ongs/senha` com `{ email, senha }`, público, sem token de e-mail. Cidade/raça no cadastro (spec 007): body `cidade: { nome, uf }` e, no animal, `raca: { nome }`; find-or-create; **não** enviar `idCidade`/`idRaca`. Contas (spec 009): `GET`/`PUT`/`PATCH /usuarios/me` (papel `usuario`) e `/ongs/me` (papel `ong`); `GET /usuarios` e `DELETE /usuarios/:id` só `ong`. Edição: nome, e-mail, contato (só usuário), cidade inline. Sem senha no perfil. Hard delete; **409** se o usuário tiver animais. `GET /auth/me` inalterado `{ id, papel, email }`. Login **não** checa `Usuario.status`.
+Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` nas tabelas). Auth: spec 003. Esqueci senha (MVP TCC, opção A): spec 006 — `PUT /auth/usuarios/senha` e `PUT /auth/ongs/senha` com `{ email, senha }`, público, sem token de e-mail. Cidade/raça no cadastro (spec 007): body `cidade: { nome, uf }` e, no animal, `raca: { nome }`; find-or-create; **não** enviar `idCidade`/`idRaca`. Contas (spec 009): `GET`/`PUT`/`PATCH /usuarios/me` (papel `usuario`) e `/ongs/me` (papel `ong`); `GET /usuarios` e `DELETE /usuarios/:id` só `ong`. Edição: nome, e-mail, contato (usuário e ONG), cidade inline. Sem senha no perfil. Hard delete; **409** se o usuário tiver animais. `GET /auth/me` inalterado `{ id, papel, email }`. Login **não** checa `Usuario.status`. **Contato WhatsApp (spec 011):** `GET /animais` devolve `contato` do tutor (`usuario` ou `instituicao`); `Instituicao.contato` opcional no banco; cadastro ONG exige o campo; `PATCH /ongs/me` aceita `contato`; e-mail do tutor **não** entra no GET de animal. Clientes montam `https://wa.me/…` (web 012 / mobile 014).
 
 | Entidade | PK | Atributos | FKs |
 |----------|----|-----------|-----|
 | Cidade | idCidade | nome(60), endereco(200), uf(2), pais(45); unique (nome, uf) | — |
 | Usuario | idUsuario | nome(150), email(150 unique), senha(100 hash), contato(20), status(1) | idCidade → Cidade |
-| Instituicao | idInstituicao | nome(100), email(150 unique), senha(100 hash) | idCidade → Cidade |
+| Instituicao | idInstituicao | nome(100), email(150 unique), senha(100 hash), contato(20)? | idCidade → Cidade |
 | Raca | idRaca | nome(60 unique), descricao(200) | — |
 | Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)?, urlImagem(500)? | idCidade; idInstituicao?; idUsuario?; idRaca |
 | Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
@@ -238,9 +239,11 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Foto do animal (spec 010 + mobile 012 + web 011):** uma por animal, opcional na API. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Mobile (spec 012) e painel web (spec 011): cadastro exige foto no front e sempre chama as duas rotas; conversão JPEG no cliente.
 
-**Seed local** (specs 004/005): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário, 1 ONG, 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`. Animais do seed **sem** foto (`urlImagem` null).
+**Contato do tutor no GET de animais (spec 011):** `usuario` e `instituicao` no include passam a ter `id` + `nome` + `contato` (sem e-mail). `Instituicao.contato` é `VarChar(20)?`. Cadastro ONG exige `contato`; `PATCH /ongs/me` aceita o campo. O cliente monta o `wa.me` (web 012 / mobile 014).
 
-**Lacunas vs RFs (próximas):** filtros avançados (RF0005); upload de foto no painel web; IA (RF0008).
+**Seed local** (specs 004/005 + 011): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário (`contato` `51999999999`), 1 ONG (`contato` `51888888888`), 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`. Animais do seed **sem** foto (`urlImagem` null).
+
+**Lacunas vs RFs (próximas):** filtros avançados (RF0005); IA (RF0008); ícone WhatsApp nos clientes (web 012 / mobile 014).
 
 ### 4.5 Casos de uso
 
@@ -394,6 +397,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-01 | Storage: uma foto por animal; `urlImagem`; `POST`/`DELETE /animais/:id/imagem`; campo `imagem`; 8 MB; Secret só no Node | Spec 010 / autora |
 | 2026-09-01 | Mobile: upload/câmera da foto do animal (spec 012); cadastro P/E exige foto no front; JPEG no cliente; web ainda sem card Fotos | Mobile spec 012 / autora |
 | 2026-09-03 | Web: upload/captura da foto do animal no painel (spec 011); uma foto; obrigatória no cadastro (front); JPEG no canvas | Web spec 011 / autora |
+| 2026-09-07 | Contato WhatsApp: API devolve `contato` do tutor; `Instituicao.contato`; cadastro/`PATCH` ONG aceitam o campo (spec 011). Clientes `wa.me` ainda web 012 / mobile 014 | Spec 011 / autora |
 
 ---
 
@@ -418,6 +422,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] Supabase Storage — foto do animal (API — spec 010)
 - [x] Upload/câmera no mobile (mobile spec 012 — RF0007)
 - [x] Card de fotos no painel web (web spec 011 — RF0007)
+- [x] Contato do tutor no GET de animais + `contato` na ONG (API — spec 011)
+- [ ] Ícone WhatsApp no detalhe (web spec 012; mobile spec 014)
 
 ---
 
@@ -445,3 +451,5 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-01 | Spec 010: Storage (`urlImagem`, `POST`/`DELETE /animais/:id/imagem`, campo `imagem`, 8 MB) |
 | 2026-09-01 | Mobile spec 012: upload/câmera da foto do animal (RF0007 no app); web ainda sem card Fotos |
 | 2026-09-03 | Web spec 011: upload/captura da foto do animal no painel (RF0007 web); cadastro exige foto no front |
+| 2026-09-07 | Specs de contato WhatsApp (backend 011, web 012, mobile 014): telefone do tutor no GET de animais; `contato` na ONG; ícone `wa.me` no detalhe |
+| 2026-09-07 | Spec 011 implementada: `Instituicao.contato`; GET `/animais` com `contato` do tutor; cadastro e `PATCH /ongs/me` aceitam o campo; seed ONG `51888888888` |

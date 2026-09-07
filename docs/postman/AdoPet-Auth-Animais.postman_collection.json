@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "AdoPet — Auth + Animais",
-    "description": "Collection local: auth JWT, esqueci senha (006), CRUD /animais (005), cidade/raça inline (007), contas (009) e Storage (010).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
+    "description": "Collection local: auth JWT, esqueci senha (006), CRUD /animais (005), cidade/raça inline (007), contas (009), Storage (010) e contato WhatsApp (011).\nBase: http://localhost:3000\nSeed: ong@adopet.local / usuario@adopet.local — senha123",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -34,10 +34,10 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"ONG Estrela\",\n  \"email\": \"ong.estrela@email.com\",\n  \"senha\": \"senha123\",\n  \"cidade\": { \"nome\": \"Estrela\", \"uf\": \"RS\" }\n}"
+              "raw": "{\n  \"nome\": \"ONG Estrela\",\n  \"email\": \"ong.estrela@email.com\",\n  \"senha\": \"senha123\",\n  \"contato\": \"51888888888\",\n  \"cidade\": { \"nome\": \"Estrela\", \"uf\": \"RS\" }\n}"
             },
             "url": "{{baseUrl}}/auth/ongs/cadastro",
-            "description": "Spec 007: reutiliza a mesma cidade se já existir (nome+UF)."
+            "description": "Spec 011: contato obrigatório (igual usuário). Spec 007: reutiliza a mesma cidade se já existir (nome+UF)."
           }
         },
         {
@@ -318,9 +318,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"ONG Demo Editada\"\n}"
+              "raw": "{\n  \"nome\": \"ONG Demo Editada\",\n  \"contato\": \"51977777777\"\n}"
             },
-            "url": "{{baseUrl}}/ongs/me"
+            "url": "{{baseUrl}}/ongs/me",
+            "description": "Spec 011: aceita contato (1–20). Sem senha."
           }
         },
         {
