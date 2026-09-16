@@ -1,0 +1,7 @@
+services:
+  ai:
+    build: ./ai
+    ports:
+      - "8000:8000"
+    environment:
+      AI_SERVICE_SECRET: ${AI_SERVICE_SECRET:-dev-ai-secret}

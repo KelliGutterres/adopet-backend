@@ -1,4 +1,4 @@
-// Schema alinhado à Figura 11 (MER) + auth (003) + CRUD animais (005) + unique cidade/raça (007) + urlImagem (010) + contato ONG (011)
+// Schema alinhado à Figura 11 (MER) + auth (003) + CRUD animais (005) + unique cidade/raça (007) + urlImagem (010) + contato ONG (011) + embedding IA (012)
 
 generator client {
   provider = "prisma-client-js"
@@ -69,6 +69,7 @@ model Animal {
   idUsuario     Int?
   idRaca        Int
   urlImagem     String? @db.VarChar(500)
+  embedding     Json?
 
   cidade      Cidade       @relation(fields: [idCidade], references: [idCidade])
   instituicao Instituicao? @relation(fields: [idInstituicao], references: [idInstituicao])

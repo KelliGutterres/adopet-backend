@@ -131,7 +131,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [ ] Filtros: situação, espécie, porte, idade, localização, status — RF0005
 - [ ] Detalhes do animal (fotos, descrição, localização) — RF0006
 - [x] Upload por galeria ou câmera — RF0007 (mobile spec 012; web spec 011)
-- [ ] Comparação inteligente de imagens — RF0008
+- [ ] Comparação inteligente de imagens — RF0008 (API spec 012 pronta; UI mobile ainda placeholder spec 006)
 - [ ] Telas de protótipo: autenticação/cadastro; listagem de animais
 
 ### Web (ONG = administrador do painel)
@@ -151,14 +151,14 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] Edição de contas (usuário/ONG) + ONG lista/exclui usuários (spec 009)
 - [x] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL) — spec 010
 - [x] Contato WhatsApp do responsável (`contato` no GET de animais + na ONG) — spec 011
-- [ ] Integração com serviço Python de comparação de imagens
+- [x] Integração com serviço Python de comparação de imagens — spec 012
 - [ ] Filtros avançados (RF0005)
 
 ### Serviço de IA (Python — dentro de `adopet-backend`)
-- [ ] Pasta `ai/` (ou similar) no mesmo repositório do backend
-- [ ] Receber imagem enviada pelo usuário (via API Node)
-- [ ] Comparar com imagens já cadastradas
-- [ ] Retornar similaridades / candidatos ao backend Node
+- [x] Pasta `ai/` (ou similar) no mesmo repositório do backend
+- [x] Receber imagem enviada pelo usuário (via API Node)
+- [x] Comparar com imagens já cadastradas
+- [x] Retornar similaridades / candidatos ao backend Node
 
 ---
 
@@ -216,12 +216,12 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 | Usuario | idUsuario | nome(150), email(150 unique), senha(100 hash), contato(20), status(1) | idCidade → Cidade |
 | Instituicao | idInstituicao | nome(100), email(150 unique), senha(100 hash), contato(20)? | idCidade → Cidade |
 | Raca | idRaca | nome(60 unique), descricao(200) | — |
-| Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)?, urlImagem(500)? | idCidade; idInstituicao?; idUsuario?; idRaca |
+| Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)?, urlImagem(500)?, embedding Json? | idCidade; idInstituicao?; idUsuario?; idRaca |
 | Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
 
 **Relacionamentos 1:N:** Cidade → Usuario, Instituicao, Animal; Instituicao → Animal (FK opcional); Usuario → Animal (FK opcional); Raca → Animal; Animal → Transacao.
 
-**Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status`/`porte` `@db.Char(1)`; `idade` `Int?` (anos); `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; `Transacao` keys de imagem `VarChar(200)`; foto do animal `urlImagem` `VarChar(500)?` (URL pública do Storage; blob no bucket).
+**Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status`/`porte` `@db.Char(1)`; `idade` `Int?` (anos); `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; `Transacao` keys de imagem `VarChar(200)`; foto do animal `urlImagem` `VarChar(500)?` (URL pública do Storage; blob no bucket); `Animal.embedding` `Json?` (vetor ResNet50, 2048 números; **não** sai no GET).
 
 **Status do Animal** (`Char(1)`):
 
@@ -239,11 +239,13 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Foto do animal (spec 010 + mobile 012 + web 011):** uma por animal, opcional na API. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Mobile (spec 012) e painel web (spec 011): cadastro exige foto no front e sempre chama as duas rotas; conversão JPEG no cliente.
 
+**Comparação de imagens (spec 012, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,50; grava `Transacao`. Upload do cadastro tenta gerar `embedding` (falha da IA não impede a foto). GET **não** devolve o vetor. UI mobile/web ainda não consome. Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
+
 **Contato do tutor no GET de animais (spec 011):** `usuario` e `instituicao` no include passam a ter `id` + `nome` + `contato` (sem e-mail). `Instituicao.contato` é `VarChar(20)?`. Cadastro ONG exige `contato`; `PATCH /ongs/me` aceita o campo. O cliente monta o `wa.me` (web 012 / mobile 014).
 
 **Seed local** (specs 004/005 + 011): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário (`contato` `51999999999`), 1 ONG (`contato` `51888888888`), 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`. Animais do seed **sem** foto (`urlImagem` null).
 
-**Lacunas vs RFs (próximas):** filtros avançados (RF0005); IA (RF0008); ícone WhatsApp nos clientes (web 012 / mobile 014).
+**Lacunas vs RFs (próximas):** filtros avançados (RF0005); UI da busca por foto (mobile spec 006 ainda placeholder); ícone WhatsApp nos clientes (web 012 / mobile 014).
 
 ### 4.5 Casos de uso
 
@@ -338,8 +340,9 @@ Critério de pronto: [comportamento verificável]
 - Câmera/galeria para RF0007 (mobile spec 012; painel web spec 011).
 
 ### IA (Python, pasta dentro do backend)
-- Endpoint(s) claros de comparação; contrato JSON documentado.
-- Chamado pelo Node.js do mesmo repositório; sem acoplamento direto ao frontend.
+- FastAPI em `ai/`: só `GET /health` e `POST /embed` (ResNet50 ImageNet, CPU).
+- Node orquestra (`AI_SERVICE_URL` + `AI_SERVICE_SECRET`); cosseno e `Transacao` no Node.
+- Sem acoplamento direto ao frontend.
 
 ### Git
 - Commits curtos no imperativo (`feat: adiciona listagem de animais`).
@@ -398,6 +401,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-01 | Mobile: upload/câmera da foto do animal (spec 012); cadastro P/E exige foto no front; JPEG no cliente; web ainda sem card Fotos | Mobile spec 012 / autora |
 | 2026-09-03 | Web: upload/captura da foto do animal no painel (spec 011); uma foto; obrigatória no cadastro (front); JPEG no canvas | Web spec 011 / autora |
 | 2026-09-07 | Contato WhatsApp: API devolve `contato` do tutor; `Instituicao.contato`; cadastro/`PATCH` ONG aceitam o campo (spec 011). Clientes `wa.me` ainda web 012 / mobile 014 | Spec 011 / autora |
+| 2026-09-14 | IA: ResNet50 ImageNet + cosseno; Python só embedding; Node `POST /animais/comparar`; vetor em `Animal.embedding`; CPU local (Univates/notebook); Oracle só se faltar RAM | Spec 012 / autora |
 
 ---
 
@@ -423,6 +427,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] Upload/câmera no mobile (mobile spec 012 — RF0007)
 - [x] Card de fotos no painel web (web spec 011 — RF0007)
 - [x] Contato do tutor no GET de animais + `contato` na ONG (API — spec 011)
+- [x] Serviço de IA local (spec 012 — `ai/` + `POST /animais/comparar`); UI mobile ainda placeholder
 - [ ] Ícone WhatsApp no detalhe (web spec 012; mobile spec 014)
 
 ---
@@ -453,3 +458,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-03 | Web spec 011: upload/captura da foto do animal no painel (RF0007 web); cadastro exige foto no front |
 | 2026-09-07 | Specs de contato WhatsApp (backend 011, web 012, mobile 014): telefone do tutor no GET de animais; `contato` na ONG; ícone `wa.me` no detalhe |
 | 2026-09-07 | Spec 011 implementada: `Instituicao.contato`; GET `/animais` com `contato` do tutor; cadastro e `PATCH /ongs/me` aceitam o campo; seed ONG `51888888888` |
+| 2026-09-14 | Spec 012: pasta `ai/` FastAPI ResNet50; `Animal.embedding`; `POST /animais/comparar`; execução local CPU |

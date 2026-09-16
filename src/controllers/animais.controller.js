@@ -58,6 +58,15 @@ async function enviarImagem(req, res, next) {
   }
 }
 
+async function comparar(req, res, next) {
+  try {
+    const resultado = await animaisService.comparar(req.file, req.query);
+    res.status(200).json(resultado);
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function removerImagem(req, res, next) {
   try {
     await animaisService.removerImagem(req.params.id, req.auth);
@@ -75,4 +84,5 @@ module.exports = {
   excluir,
   enviarImagem,
   removerImagem,
+  comparar,
 };

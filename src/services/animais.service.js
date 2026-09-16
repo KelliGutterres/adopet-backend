@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { prisma } = require('../db');
 const { AppError } = require('../errors/AppError');
 const {
@@ -6,6 +7,12 @@ const {
   rejeitarIdsLegados,
 } = require('./localidade.service');
 const { uploadImagemAnimal, removerObjeto } = require('./storage.service');
+const {
+  cosineSimilarity,
+  arredondarScore,
+  gerarEmbedding,
+  tentarEmbedding,
+} = require('./ai.service');
 
 const STATUS_VALIDOS = new Set(['E', 'P', 'A']);
 const ESPECIES_VALIDAS = new Set(['CAO', 'GATO']);
@@ -40,6 +47,54 @@ const animalInclude = {
     },
   },
 };
+
+function semEmbedding(animal) {
+  if (!animal || typeof animal !== 'object') {
+    return animal;
+  }
+  const { embedding: _embedding, ...rest } = animal;
+  return rest;
+}
+
+function parseLimite(value) {
+  if (value === undefined || value === null || value === '') {
+    return 5;
+  }
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1 || n > 10) {
+    throw new AppError('limite inválido (1 a 10)');
+  }
+  return n;
+}
+
+function parseMinScore(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0.5;
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0 || n > 1) {
+    throw new AppError('minScore inválido (0 a 1)');
+  }
+  return n;
+}
+
+function parseStatusAlvo(value) {
+  if (value === undefined || value === null || value === '') {
+    return ['P', 'E'];
+  }
+  if (typeof value !== 'string') {
+    throw new AppError('statusAlvo inválido (use P, E ou P,E)');
+  }
+  const parts = value
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+  const allowed = new Set(['P', 'E']);
+  if (parts.length === 0 || parts.some((p) => !allowed.has(p))) {
+    throw new AppError('statusAlvo inválido (use P, E ou P,E)');
+  }
+  return [...new Set(parts)];
+}
 
 function parseId(id) {
   const n = Number(id);
@@ -142,6 +197,9 @@ function rejeitarCamposImagemNoJson(body = {}) {
   if (body.keyImagem !== undefined) {
     throw new AppError('keyImagem não é aceito');
   }
+  if (body.embedding !== undefined) {
+    throw new AppError('embedding não é aceito neste endpoint');
+  }
 }
 
 async function assertPodeMutar(idAnimal, auth) {
@@ -183,7 +241,7 @@ async function criar(body, auth) {
     include: animalInclude,
   });
 
-  return animal;
+  return semEmbedding(animal);
 }
 
 async function listar({ status } = {}) {
@@ -192,11 +250,12 @@ async function listar({ status } = {}) {
     where.status = validarStatus(status);
   }
 
-  return prisma.animal.findMany({
+  const animais = await prisma.animal.findMany({
     where,
     include: animalInclude,
     orderBy: { idAnimal: 'asc' },
   });
+  return animais.map(semEmbedding);
 }
 
 async function buscarPorId(id) {
@@ -208,7 +267,7 @@ async function buscarPorId(id) {
   if (!animal) {
     throw new AppError('Animal não encontrado', 404);
   }
-  return animal;
+  return semEmbedding(animal);
 }
 
 async function atualizar(id, body, auth) {
@@ -250,11 +309,12 @@ async function atualizar(id, body, auth) {
     throw new AppError('Nenhum campo para atualizar');
   }
 
-  return prisma.animal.update({
+  const atualizado = await prisma.animal.update({
     where: { idAnimal },
     data,
     include: animalInclude,
   });
+  return semEmbedding(atualizado);
 }
 
 async function excluir(id, auth) {
@@ -280,13 +340,14 @@ async function enviarImagem(id, file, auth) {
   }
 
   const urlImagem = await uploadImagemAnimal(idAnimal, file);
+  const embedding = await tentarEmbedding(file);
   const atualizado = await prisma.animal.update({
     where: { idAnimal },
-    data: { urlImagem },
+    data: { urlImagem, embedding },
     include: animalInclude,
   });
   await removerObjeto(animal.urlImagem);
-  return atualizado;
+  return semEmbedding(atualizado);
 }
 
 async function removerImagem(id, auth) {
@@ -296,10 +357,62 @@ async function removerImagem(id, auth) {
   if (animal.urlImagem) {
     await prisma.animal.update({
       where: { idAnimal },
-      data: { urlImagem: null },
+      data: { urlImagem: null, embedding: null },
     });
     await removerObjeto(animal.urlImagem);
   }
+}
+
+async function comparar(file, query = {}) {
+  if (!file || !file.buffer || file.size === 0) {
+    throw new AppError('imagem é obrigatório');
+  }
+
+  const limite = parseLimite(query.limite);
+  const minScore = parseMinScore(query.minScore);
+  const statusAlvo = parseStatusAlvo(query.statusAlvo);
+  const queryEmbedding = await gerarEmbedding(file);
+
+  const animais = await prisma.animal.findMany({
+    where: {
+      status: { in: statusAlvo },
+      NOT: { urlImagem: null },
+    },
+    include: animalInclude,
+  });
+
+  const ranked = animais
+    .filter((animal) => Array.isArray(animal.embedding) && animal.embedding.length)
+    .map((animal) => ({
+      animal,
+      score: cosineSimilarity(queryEmbedding, animal.embedding),
+    }))
+    .filter((item) => item.score >= minScore)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limite);
+
+  const keyImageSent = `busca/${crypto.randomUUID()}`;
+  const dataBusca = new Date();
+  const candidatos = [];
+
+  for (const item of ranked) {
+    const scoreSimilarity = arredondarScore(item.score);
+    await prisma.transacao.create({
+      data: {
+        keyImageSent,
+        keyImageCompared: `animal/${item.animal.idAnimal}`,
+        dataBusca,
+        scoreSimilarity,
+        idAnimal: item.animal.idAnimal,
+      },
+    });
+    candidatos.push({
+      scoreSimilarity,
+      animal: semEmbedding(item.animal),
+    });
+  }
+
+  return { candidatos };
 }
 
 module.exports = {
@@ -310,4 +423,5 @@ module.exports = {
   excluir,
   enviarImagem,
   removerImagem,
+  comparar,
 };

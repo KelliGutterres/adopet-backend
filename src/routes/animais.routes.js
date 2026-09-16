@@ -7,6 +7,15 @@ const { uploadImagem } = require('../middleware/uploadImagem');
 const router = Router();
 
 router.get('/', animaisController.listar);
+
+router.post(
+  '/comparar',
+  authenticate,
+  authorize('ong', 'usuario'),
+  uploadImagem,
+  animaisController.comparar
+);
+
 router.get('/:id', animaisController.buscarPorId);
 
 router.post(

@@ -10,4 +10,5 @@ module.exports = {
   ongsService,
   localidadeService: require('./localidade.service'),
   storageService: require('./storage.service'),
+  aiService: require('./ai.service'),
 };
