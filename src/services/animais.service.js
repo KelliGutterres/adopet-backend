@@ -331,6 +331,21 @@ async function excluir(id, auth) {
   await removerObjeto(urlAntiga);
 }
 
+async function preencherEmbedding(idAnimal, urlImagem, file) {
+  const embedding = await tentarEmbedding(file);
+  if (!embedding) {
+    return;
+  }
+  try {
+    await prisma.animal.updateMany({
+      where: { idAnimal, urlImagem },
+      data: { embedding },
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 async function enviarImagem(id, file, auth) {
   const idAnimal = parseId(id);
   const animal = await assertPodeMutar(idAnimal, auth);
@@ -340,13 +355,13 @@ async function enviarImagem(id, file, auth) {
   }
 
   const urlImagem = await uploadImagemAnimal(idAnimal, file);
-  const embedding = await tentarEmbedding(file);
   const atualizado = await prisma.animal.update({
     where: { idAnimal },
-    data: { urlImagem, embedding },
+    data: { urlImagem, embedding: null },
     include: animalInclude,
   });
   await removerObjeto(animal.urlImagem);
+  void preencherEmbedding(idAnimal, urlImagem, file);
   return semEmbedding(atualizado);
 }
 

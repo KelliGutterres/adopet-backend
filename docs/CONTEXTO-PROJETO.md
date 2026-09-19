@@ -239,7 +239,7 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Foto do animal (spec 010 + mobile 012 + web 011):** uma por animal, opcional na API. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Mobile (spec 012) e painel web (spec 011): cadastro exige foto no front e sempre chama as duas rotas; conversão JPEG no cliente.
 
-**Comparação de imagens (spec 012 + mobile 016, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,50; grava `Transacao`. Upload do cadastro tenta gerar `embedding` (falha da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba Similaridade + botão P/E). Web ainda não consome. Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
+**Comparação de imagens (spec 012 + mobile 016, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,50; grava `Transacao`. Upload do cadastro grava `urlImagem` e responde; o embedding roda em background (falha/lentidão da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba Similaridade + botão P/E). Web ainda não consome. Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
 
 **Contato do tutor no GET de animais (spec 011):** `usuario` e `instituicao` no include passam a ter `id` + `nome` + `contato` (sem e-mail). `Instituicao.contato` é `VarChar(20)?`. Cadastro ONG exige `contato`; `PATCH /ongs/me` aceita o campo. O cliente monta o `wa.me` (web 012 / mobile 014).
 
@@ -341,7 +341,7 @@ Critério de pronto: [comportamento verificável]
 
 ### IA (Python, pasta dentro do backend)
 - FastAPI em `ai/`: só `GET /health` e `POST /embed` (ResNet50 ImageNet, CPU).
-- Node orquestra (`AI_SERVICE_URL` + `AI_SERVICE_SECRET`); cosseno e `Transacao` no Node.
+- Node orquestra (`AI_SERVICE_URL` + `AI_SERVICE_SECRET`); cosseno e `Transacao` no Node. Upload da foto responde após gravar `urlImagem`; embedding em background.
 - Sem acoplamento direto ao frontend.
 
 ### Git
@@ -403,6 +403,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-07 | Contato WhatsApp: API devolve `contato` do tutor; `Instituicao.contato`; cadastro/`PATCH` ONG aceitam o campo (spec 011). Clientes `wa.me` ainda web 012 / mobile 014 | Spec 011 / autora |
 | 2026-09-14 | IA: ResNet50 ImageNet + cosseno; Python só embedding; Node `POST /animais/comparar`; vetor em `Animal.embedding`; CPU local (Univates/notebook); Oracle só se faltar RAM | Spec 012 / autora |
 | 2026-09-15 | Mobile consome `POST /animais/comparar` (spec 016): aba Similaridade + botão P/E; foto da busca não grava no Storage | Mobile spec 016 |
+| 2026-09-19 | Upload da foto responde após gravar `urlImagem`; embedding ResNet50 em background (evita timeout no mobile) | Spec 012 / correção |
 
 ---
 
@@ -461,3 +462,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-07 | Spec 011 implementada: `Instituicao.contato`; GET `/animais` com `contato` do tutor; cadastro e `PATCH /ongs/me` aceitam o campo; seed ONG `51888888888` |
 | 2026-09-14 | Spec 012: pasta `ai/` FastAPI ResNet50; `Animal.embedding`; `POST /animais/comparar`; execução local CPU |
 | 2026-09-15 | Mobile spec 016 consome `POST /animais/comparar` (aba Similaridade + botão P/E); web ainda sem busca por foto |
+| 2026-09-19 | Upload da foto não espera o ResNet50: grava `urlImagem` e gera embedding em background |

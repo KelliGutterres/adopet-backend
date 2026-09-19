@@ -90,6 +90,7 @@ Permitir que um usuário ou ONG autenticados **enviem uma foto** e recebam **ani
 | 8   | IA fora do ar no upload | Foto **salva mesmo assim**; embedding fica `null` (log). Busca desses animais só entra depois de novo upload ou backfill |
 | 9   | IA fora do ar na busca  | **503** `{ error: { message } }`                                                                                         |
 | 10  | GET de animais          | `omit` do campo `embedding`                                                                                              |
+| 11  | Upload vs embedding     | `POST /animais/:id/imagem` **grava `urlImagem` e responde**; ResNet50 roda **em background**. O cliente não espera a CPU (evita timeout de 20 s no mobile) |
 
 
 ---
@@ -167,7 +168,7 @@ Efeitos: para cada item de `candidatos`, um `Transacao` (`dataBusca` = agora, `s
 
 ### Upload de cadastro (já existente)
 
-`POST /animais/:id/imagem`: depois de gravar `urlImagem`, chama `POST /embed` e salva `embedding`. Falha da IA **não** desfaz o upload.
+`POST /animais/:id/imagem`: grava `urlImagem` (e zera o embedding antigo), **responde 200**, e só então chama `POST /embed` em background. Quando o vetor chega, atualiza `embedding` se a URL da foto **ainda for a mesma**. Falha ou lentidão da IA **não** atrasa nem desfaz o upload.
 
 `DELETE /animais/:id/imagem`: `embedding` → `null`.
 
