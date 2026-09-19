@@ -1,11 +1,13 @@
 # Spec 012 — Serviço de IA (similaridade de imagens)
 
-> **Status:** aprovada e implementada (2026-09-14). UI mobile/web fora.  
+> **Status:** aprovada e implementada (2026-09-14). UI mobile: spec 016. Web fora.  
 > Depende de: spec 010 (foto `urlImagem` no Storage); spec 005 (CRUD `/animais`); spec 003 (JWT).  
-> Consomem depois: mobile (ativar botão spec 006 / RF0008) e, se couber, web.  
+> Consomem: mobile spec 016 (aba Similaridade + botão P/E → `POST /animais/comparar`). Web ainda fora.  
 > Fecha a pendência do CONTEXTO: pasta `ai/`, integração Node ↔ Python, escrita em `Transacao`.
 
 O modelo **não é treinado no AdoPet**. Usa-se **ResNet50 pré-treinado na ImageNet** (PyTorch/`torchvision`) como extrator de características e **similaridade de cosseno** entre vetores. Sem fine-tune.
+
+A UI do app (ativar câmera da lista e resultados) está na **mobile spec 016**.
 
 Execução **local** (notebook ou VM Univates): CPU. Oracle Cloud ficou como plano B se a Univates não tiver RAM.
 
@@ -13,7 +15,7 @@ Execução **local** (notebook ou VM Univates): CPU. Oracle Cloud ficou como pla
 
 ## Objetivo
 
-Permitir que um usuário ou ONG autenticados **enviem uma foto** e recebam **animais perdidos/encontrados visualmente semelhantes**, com score. Cobre o **RF0008** no servidor. O app ainda não ativa o botão (spec mobile 006 permanece placeholder até a spec de UI).
+Permitir que um usuário ou ONG autenticados **enviem uma foto** e recebam **animais perdidos/encontrados visualmente semelhantes**, com score. Cobre o **RF0008** no servidor. A UI do app está na **mobile spec 016**.
 
 ---
 
@@ -221,4 +223,4 @@ Na VM Univates: os mesmos dois processos (ou Docker `ai/Dockerfile`). Só muda o
 4. `src/services/ai.service.js` + hook upload + `POST /comparar`
 5. Docs
 
-UI mobile/web = specs seguintes.
+UI mobile = spec 016. Web ainda fora.
