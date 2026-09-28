@@ -84,7 +84,7 @@ Permitir que um usuário ou ONG autenticados **enviem uma foto** e recebam **ani
 | 2   | Similaridade            | Cosseno no **Node**; Python só gera embedding                                                                            |
 | 3   | Onde roda agora         | Processo local na porta **8000** (como a Univates faria na mesma máquina ou ao lado do Node)                             |
 | 4   | Candidatos              | Só status `P` **e** `E` com foto e embedding; **não** `A`                                                                |
-| 5   | Ranking                 | Até **5** resultados com score **≥ 0,50** (limiar “pouco parecido” do protótipo Colab)                                   |
+| 5   | Ranking                 | Até **5** resultados com score **≥ 0,60** (2026-09-28: corte sobe de 0,50; abaixo de 60% não entra, mesmo entre os maiores) |
 | 6   | Foto da busca           | Não persiste no Storage; `keyImageSent` = `busca/{uuid}`                                                                 |
 | 7   | `keyImageCompared`      | `animal/{idAnimal}` (uma foto por animal)                                                                                |
 | 8   | IA fora do ar no upload | Foto **salva mesmo assim**; embedding fica `null` (log). Busca desses animais só entra depois de novo upload ou backfill |
@@ -141,7 +141,7 @@ Query opcional:
 | Query        | Padrão | Efeito                   |
 | ------------ | ------ | ------------------------ |
 | `limite`     | `5`    | 1–10                     |
-| `minScore`   | `0.5`  | 0–1                      |
+| `minScore`   | `0.6`  | 0–1                      |
 | `statusAlvo` | `P,E`  | Só `P`, só `E`, ou ambos |
 
 

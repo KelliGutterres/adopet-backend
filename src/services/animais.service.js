@@ -69,7 +69,7 @@ function parseLimite(value) {
 
 function parseMinScore(value) {
   if (value === undefined || value === null || value === '') {
-    return 0.5;
+    return 0.6;
   }
   const n = Number(value);
   if (!Number.isFinite(n) || n < 0 || n > 1) {
