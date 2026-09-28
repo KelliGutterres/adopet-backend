@@ -1,13 +1,13 @@
 # Spec 012 — Serviço de IA (similaridade de imagens)
 
-> **Status:** aprovada e implementada (2026-09-14). UI mobile: spec 016. Web fora.  
+> **Status:** aprovada e implementada (2026-09-14). UI mobile: spec 016. UI web: spec 013 (em revisão).  
 > Depende de: spec 010 (foto `urlImagem` no Storage); spec 005 (CRUD `/animais`); spec 003 (JWT).  
-> Consomem: mobile spec 016 (aba Similaridade + botão P/E → `POST /animais/comparar`). Web ainda fora.  
+> Consomem: mobile spec 016 (aba Similaridade + botão P/E → `POST /animais/comparar`); web spec 013 (menu Comparação de Similaridade).  
 > Fecha a pendência do CONTEXTO: pasta `ai/`, integração Node ↔ Python, escrita em `Transacao`.
 
 O modelo **não é treinado no AdoPet**. Usa-se **ResNet50 pré-treinado na ImageNet** (PyTorch/`torchvision`) como extrator de características e **similaridade de cosseno** entre vetores. Sem fine-tune.
 
-A UI do app (ativar câmera da lista e resultados) está na **mobile spec 016**.
+A UI do app (ativar câmera da lista e resultados) está na **mobile spec 016**. A UI do painel está na **web spec 013**.
 
 Execução **local** (notebook ou VM Univates): CPU. Oracle Cloud ficou como plano B se a Univates não tiver RAM.
 
@@ -15,7 +15,7 @@ Execução **local** (notebook ou VM Univates): CPU. Oracle Cloud ficou como pla
 
 ## Objetivo
 
-Permitir que um usuário ou ONG autenticados **enviem uma foto** e recebam **animais perdidos/encontrados visualmente semelhantes**, com score. Cobre o **RF0008** no servidor. A UI do app está na **mobile spec 016**.
+Permitir que um usuário ou ONG autenticados **enviem uma foto** e recebam **animais perdidos/encontrados visualmente semelhantes**, com score. Cobre o **RF0008** no servidor. A UI do app está na **mobile spec 016**. A UI do painel está na **web spec 013**.
 
 ---
 
@@ -224,4 +224,4 @@ Na VM Univates: os mesmos dois processos (ou Docker `ai/Dockerfile`). Só muda o
 4. `src/services/ai.service.js` + hook upload + `POST /comparar`
 5. Docs
 
-UI mobile = spec 016. Web ainda fora.
+UI mobile = spec 016. UI web = spec 013.

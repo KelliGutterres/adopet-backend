@@ -131,13 +131,14 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [ ] Filtros: situação, espécie, porte, idade, localização, status — RF0005
 - [ ] Detalhes do animal (fotos, descrição, localização) — RF0006
 - [x] Upload por galeria ou câmera — RF0007 (mobile spec 012; web spec 011)
-- [x] Comparação inteligente de imagens — RF0008 (API spec 012; UI mobile spec 016)
+- [x] Comparação inteligente de imagens — RF0008 (API spec 012; UI mobile spec 016; UI web spec 013)
 - [ ] Telas de protótipo: autenticação/cadastro; listagem de animais
 
 ### Web (ONG = administrador do painel)
 - [x] Autenticação da ONG (e-mail/senha) — RF0009
 - [x] Listagem de animais no painel (adoção, encontrados, perdidos) — RF0004 / RF0010 parcial (web spec 003)
 - [x] CRUD de animais para adoção (cadastro, edição, exclusão) — RF0003 / protótipos Fig. 16–17 (web spec 007; API spec 008 para ONG admin)
+- [x] Comparação de similaridade no painel — RF0008 (web spec 013)
 - [ ] Gerenciamento de usuários e registros de animais (casos de uso da ONG na Parte 1)
 - [ ] Telas de protótipo: login web; cadastro de animal; edição/gerenciamento
 
@@ -239,13 +240,13 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Foto do animal (spec 010 + mobile 012 + web 011):** uma por animal, opcional na API. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Mobile (spec 012) e painel web (spec 011): cadastro exige foto no front e sempre chama as duas rotas; conversão JPEG no cliente.
 
-**Comparação de imagens (spec 012 + mobile 016, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,50; grava `Transacao`. Upload do cadastro grava `urlImagem` e responde; o embedding roda em background (falha/lentidão da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba Similaridade + botão P/E). Web ainda não consome. Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
+**Comparação de imagens (spec 012 + mobile 016 + web 013, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,50; grava `Transacao`. Upload do cadastro grava `urlImagem` e responde; o embedding roda em background (falha/lentidão da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba Similaridade + botão P/E). Web spec 013 consome a mesma rota no painel da ONG (menu Comparação de Similaridade). Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
 
 **Contato do tutor no GET de animais (spec 011):** `usuario` e `instituicao` no include passam a ter `id` + `nome` + `contato` (sem e-mail). `Instituicao.contato` é `VarChar(20)?`. Cadastro ONG exige `contato`; `PATCH /ongs/me` aceita o campo. O cliente monta o `wa.me` (web 012 / mobile 014).
 
 **Seed local** (specs 004/005 + 011): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário (`contato` `51999999999`), 1 ONG (`contato` `51888888888`), 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`. Animais do seed **sem** foto (`urlImagem` null).
 
-**Lacunas vs RFs (próximas):** filtros avançados (RF0005); busca por foto no painel web.
+**Lacunas vs RFs (próximas):** filtros avançados (RF0005).
 
 ### 4.5 Casos de uso
 
@@ -404,6 +405,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-14 | IA: ResNet50 ImageNet + cosseno; Python só embedding; Node `POST /animais/comparar`; vetor em `Animal.embedding`; CPU local (Univates/notebook); Oracle só se faltar RAM | Spec 012 / autora |
 | 2026-09-15 | Mobile consome `POST /animais/comparar` (spec 016): aba Similaridade + botão P/E; foto da busca não grava no Storage | Mobile spec 016 |
 | 2026-09-19 | Upload da foto responde após gravar `urlImagem`; embedding ResNet50 em background (evita timeout no mobile) | Spec 012 / correção |
+| 2026-09-19 | Web spec 013 (em revisão): painel consome `POST /animais/comparar` via menu Comparação de Similaridade | Web spec 013 |
+| 2026-09-28 | Web spec 013 implementada: `/painel/similaridade`; timeout 90 s; tabela com score e situação | Web spec 013 |
 
 ---
 
@@ -429,7 +432,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] Upload/câmera no mobile (mobile spec 012 — RF0007)
 - [x] Card de fotos no painel web (web spec 011 — RF0007)
 - [x] Contato do tutor no GET de animais + `contato` na ONG (API — spec 011)
-- [x] Serviço de IA local (spec 012 — `ai/` + `POST /animais/comparar`); UI mobile spec 016
+- [x] Serviço de IA local (spec 012 — `ai/` + `POST /animais/comparar`); UI mobile spec 016; UI web spec 013
 - [ ] Ícone WhatsApp no detalhe (web spec 012; mobile spec 014)
 
 ---
@@ -463,3 +466,5 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-14 | Spec 012: pasta `ai/` FastAPI ResNet50; `Animal.embedding`; `POST /animais/comparar`; execução local CPU |
 | 2026-09-15 | Mobile spec 016 consome `POST /animais/comparar` (aba Similaridade + botão P/E); web ainda sem busca por foto |
 | 2026-09-19 | Upload da foto não espera o ResNet50: grava `urlImagem` e gera embedding em background |
+| 2026-09-19 | Web spec 013 (em revisão): Comparação de Similaridade no painel; consome `POST /animais/comparar` |
+| 2026-09-28 | Web spec 013 implementada: menu Comparação de Similaridade em `/painel/similaridade` |
