@@ -4,6 +4,7 @@ const authRoutes = require('./auth.routes');
 const animaisRoutes = require('./animais.routes');
 const usuariosRoutes = require('./usuarios.routes');
 const ongsRoutes = require('./ongs.routes');
+const dashboardRoutes = require('./dashboard.routes');
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use('/auth', authRoutes);
 router.use('/animais', animaisRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/ongs', ongsRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;

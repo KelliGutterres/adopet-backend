@@ -52,7 +52,7 @@ function semEmbedding(animal) {
   if (!animal || typeof animal !== 'object') {
     return animal;
   }
-  const { embedding: _embedding, ...rest } = animal;
+  const { embedding: _embedding, criadoEm: _criadoEm, ...rest } = animal;
   return rest;
 }
 
@@ -327,7 +327,11 @@ async function excluir(id, auth) {
   }
 
   const urlAntiga = animal.urlImagem;
-  await prisma.animal.delete({ where: { idAnimal } });
+  const status = String(animal.status || '').trim();
+  await prisma.$transaction([
+    prisma.exclusaoAnimal.create({ data: { status } }),
+    prisma.animal.delete({ where: { idAnimal } }),
+  ]);
   await removerObjeto(urlAntiga);
 }
 

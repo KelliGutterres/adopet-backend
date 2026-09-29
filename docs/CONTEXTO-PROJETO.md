@@ -153,6 +153,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] Integração Supabase Storage (upload/recuperação; salvar só URL/referência no PostgreSQL) — spec 010
 - [x] Contato WhatsApp do responsável (`contato` no GET de animais + na ONG) — spec 011
 - [x] Integração com serviço Python de comparação de imagens — spec 012
+- [x] Métricas do dashboard (`GET /dashboard`, papel `ong`) — spec 014
 - [ ] Filtros avançados (RF0005)
 
 ### Serviço de IA (Python — dentro de `adopet-backend`)
@@ -408,6 +409,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-19 | Web spec 013 (em revisão): painel consome `POST /animais/comparar` via menu Comparação de Similaridade | Web spec 013 |
 | 2026-09-28 | Web spec 013 implementada: `/painel/similaridade`; timeout 90 s; tabela com score e situação | Web spec 013 |
 | 2026-09-28 | Ranking de `POST /animais/comparar`: até 5 candidatos com score ≥ 0,60 (antes 0,50). Web e mobile só exibem o que a API devolve | Spec 013 |
+| 2026-09-28 | Dashboard: `Animal.criadoEm`; tabela `ExclusaoAnimal` gravada na exclusão; `GET /dashboard?periodo=7d\|30d\|90d` (só ONG). Adotados = exclusões com status `A`. Web spec 015 | Spec 014 |
 
 ---
 
@@ -434,6 +436,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] Card de fotos no painel web (web spec 011 — RF0007)
 - [x] Contato do tutor no GET de animais + `contato` na ONG (API — spec 011)
 - [x] Serviço de IA local (spec 012 — `ai/` + `POST /animais/comparar`); UI mobile spec 016; UI web spec 013
+- [x] Métricas do dashboard da ONG (`GET /dashboard` — spec 014; UI web spec 015)
 - [ ] Ícone WhatsApp no detalhe (web spec 012; mobile spec 014)
 
 ---
@@ -470,3 +473,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-19 | Web spec 013 (em revisão): Comparação de Similaridade no painel; consome `POST /animais/comparar` |
 | 2026-09-28 | Web spec 013 implementada: menu Comparação de Similaridade em `/painel/similaridade` |
 | 2026-09-28 | Spec 013: corte padrão da comparação sobe para 60% (`minScore` 0,6); continua o top 5 |
+| 2026-09-28 | Spec 014: métricas do dashboard (`GET /dashboard`); `criadoEm` no animal; registro de exclusão antes do delete |

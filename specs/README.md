@@ -28,3 +28,4 @@ Ver `docs/CONTEXTO-PROJETO.md` (seção SDD).
 | [011](./011-contato-whatsapp-animal.md) | Contato WhatsApp do responsável (`contato` no GET de animais + na ONG) | aprovada e implementada |
 | [012](./012-servico-ia-similaridade.md) | Serviço Python ResNet50 + `POST /animais/comparar` | aprovada e implementada (UI mobile: spec 016) |
 | [013](./013-corte-similaridade-60.md) | Corte padrão da comparação em 60% (top 5) | aprovada e implementada |
+| [014](./014-dashboard-metricas.md) | Métricas do dashboard (`GET /dashboard`) | aprovada e implementada |
