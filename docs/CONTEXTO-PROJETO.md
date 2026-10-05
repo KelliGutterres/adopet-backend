@@ -241,7 +241,7 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Foto do animal (spec 010 + mobile 012 + web 011):** uma por animal, opcional na API. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Mobile (spec 012) e painel web (spec 011): cadastro exige foto no front e sempre chama as duas rotas; conversão JPEG no cliente.
 
-**Comparação de imagens (spec 012 + mobile 016 + web 013, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,60; grava `Transacao`. Upload do cadastro grava `urlImagem` e responde; o embedding roda em background (falha/lentidão da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba Similaridade + botão P/E). Web spec 013 consome a mesma rota no painel da ONG (menu Comparação de Similaridade). Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
+**Comparação de imagens (spec 012 + mobile 016 + web 013, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,60; grava `Transacao`. Upload do cadastro grava `urlImagem` e responde; o embedding roda em background (falha/lentidão da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba **Busca por Foto** + botão P/E). Web spec 013 consome a mesma rota no painel da ONG (menu **Busca por Foto**). Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
 
 **Contato do tutor no GET de animais (spec 011):** `usuario` e `instituicao` no include passam a ter `id` + `nome` + `contato` (sem e-mail). `Instituicao.contato` é `VarChar(20)?`. Cadastro ONG exige `contato`; `PATCH /ongs/me` aceita o campo. O cliente monta o `wa.me` (web 012 / mobile 014).
 
@@ -410,6 +410,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-28 | Web spec 013 implementada: `/painel/similaridade`; timeout 90 s; tabela com score e situação | Web spec 013 |
 | 2026-09-28 | Ranking de `POST /animais/comparar`: até 5 candidatos com score ≥ 0,60 (antes 0,50). Web e mobile só exibem o que a API devolve | Spec 013 |
 | 2026-09-28 | Dashboard: `Animal.criadoEm`; tabela `ExclusaoAnimal` gravada na exclusão; `GET /dashboard?periodo=7d\|30d\|90d` (só ONG). Adotados = exclusões com status `A`. Web spec 015 | Spec 014 |
+| 2026-09-30 | Rótulo visível da busca por foto no mobile e no painel: **Busca por Foto**. `POST /animais/comparar` e `scoreSimilarity` permanecem | Autora |
 
 ---
 
@@ -474,3 +475,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-28 | Web spec 013 implementada: menu Comparação de Similaridade em `/painel/similaridade` |
 | 2026-09-28 | Spec 013: corte padrão da comparação sobe para 60% (`minScore` 0,6); continua o top 5 |
 | 2026-09-28 | Spec 014: métricas do dashboard (`GET /dashboard`); `criadoEm` no animal; registro de exclusão antes do delete |
+| 2026-09-30 | Aba e título no app, e menu e título no painel, passam a **Busca por Foto**. A API de comparação não muda |
