@@ -244,7 +244,7 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Foto do animal (spec 010 + mobile 012 + web 011):** uma por animal, opcional na API. Upload autenticado em `POST /animais/:id/imagem` (multipart, campo `imagem`; JPEG/PNG/WebP até 8 MB). PostgreSQL guarda só `urlImagem`. Secret do Supabase só no Node. `GET` público devolve a URL. JSON de create/update **não** aceita `urlImagem`. `DELETE /animais/:id/imagem` zera a foto. Mobile (spec 012) e painel web (spec 011): cadastro exige foto no front e sempre chama as duas rotas; conversão JPEG no cliente.
 
-**Comparação de imagens (spec 012 + mobile 016 + web 013, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,60; grava `Transacao`. Upload do cadastro grava `urlImagem` e responde; o embedding roda em background (falha/lentidão da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba **Busca por Foto** + botão P/E). Web spec 013 consome a mesma rota no painel da ONG (menu **Busca por Foto**). Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
+**Comparação de imagens (spec 012 + mobile 016 + web 013, RF0008):** FastAPI em `ai/` com ResNet50 ImageNet (CPU). Node chama `POST /embed` (secret); cosseno no Node. `POST /animais/comparar` (JWT, multipart `imagem`) compara com animais **P/E** que tenham embedding; top 5 com score ≥ 0,60; grava `Transacao`. Upload do cadastro grava `urlImagem` e responde; o embedding roda em background (falha/lentidão da IA não impede a foto). GET **não** devolve o vetor. Mobile spec 016 consome a rota (aba **Busca por Imagem** + botão P/E). Web spec 013 consome a mesma rota no painel da ONG (menu **Busca por Imagem**). Local: `AI_SERVICE_URL=http://127.0.0.1:8000`.
 
 **Contato do tutor no GET de animais (spec 011):** `usuario` e `instituicao` no include passam a ter `id` + `nome` + `contato` (sem e-mail). `Instituicao.contato` é `VarChar(20)?`. Cadastro ONG exige `contato`; `PATCH /ongs/me` aceita o campo. O cliente monta o `wa.me` (web 012 / mobile 014).
 
@@ -416,6 +416,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-30 | Rótulo visível da busca por foto no mobile e no painel: **Busca por Foto**. `POST /animais/comparar` e `scoreSimilarity` permanecem | Autora |
 | 2026-10-05 | RF0005 (filtros por idade, localização e painel de filtros) fica fora de escopo. Sem spec e sem query extra em `GET /animais`. Permanecem a busca textual no mobile e, no painel, busca + espécie + porte no cliente | Autora |
 | 2026-10-05 | Notificação in-app ao cadastrar animal (A/P/E): uma linha por cadastro, oculta para o autor, leitura por conta. `GET/PATCH /notificacoes`. Painel: sino no header (web spec 016). App: sino do header (mobile spec 017). Sem push | Spec 015 |
+| 2026-10-05 | Rótulo visível da busca por imagem no mobile e no painel: **Busca por Imagem**. `POST /animais/comparar` e `scoreSimilarity` permanecem | Autora |
 
 ---
 
@@ -485,3 +486,4 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-30 | Aba e título no app, e menu e título no painel, passam a **Busca por Foto**. A API de comparação não muda |
 | 2026-10-05 | RF0005 cancelado: filtros avançados não serão implementados |
 | 2026-10-05 | Spec 015: notificação ao cadastrar animal; `Notificacao` + `NotificacaoLeitura`; o autor não vê o próprio aviso |
+| 2026-10-05 | Aba e título no app, e menu e título no painel, passam a **Busca por Imagem**. A API de comparação não muda |
