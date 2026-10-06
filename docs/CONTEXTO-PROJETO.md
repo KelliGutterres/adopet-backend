@@ -128,7 +128,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [ ] Login (e-mail/senha) — RF0002
 - [ ] Cadastro/edição/exclusão de animais (nome, espécie, raça, idade, descrição, status, imagens) — RF0003
 - [ ] Listagem: adoção, perdidos, localizados/encontrados — RF0004
-- [ ] Filtros: situação, espécie, porte, idade, localização, status — RF0005
+- Filtros avançados (RF0005): **cancelados** em 2026-10-05. Não implementar painel de filtros, idade, localização nem query extra na API. Permanece a busca textual no app e, no painel, busca + espécie + porte no cliente
 - [ ] Detalhes do animal (fotos, descrição, localização) — RF0006
 - [x] Upload por galeria ou câmera — RF0007 (mobile spec 012; web spec 011)
 - [x] Comparação inteligente de imagens — RF0008 (API spec 012; UI mobile spec 016; UI web spec 013)
@@ -154,7 +154,8 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 - [x] Contato WhatsApp do responsável (`contato` no GET de animais + na ONG) — spec 011
 - [x] Integração com serviço Python de comparação de imagens — spec 012
 - [x] Métricas do dashboard (`GET /dashboard`, papel `ong`) — spec 014
-- [ ] Filtros avançados (RF0005)
+- [x] Notificação in-app ao cadastrar animal (`POST /animais` grava; `GET/PATCH /notificacoes`) — spec 015
+- Filtros avançados (RF0005): **cancelados** em 2026-10-05. `GET /animais` continua só com `?status=`
 
 ### Serviço de IA (Python — dentro de `adopet-backend`)
 - [x] Pasta `ai/` (ou similar) no mesmo repositório do backend
@@ -188,7 +189,7 @@ A IA **não** deve implementar feature sem spec correspondente em `specs/` (salv
 | RF0002 | Autenticar Usuário | Login com e-mail e senha | Obrigatória |
 | RF0003 | Manter Animais | ONGs e usuários cadastram, editam e excluem animais (nome, espécie, raça, idade, descrição, status, imagens) | Obrigatória |
 | RF0004 | Listagem de Animais | Lista de animais para adoção, perdidos e localizados | Obrigatória |
-| RF0005 | Filtros de Busca | Filtrar por situação, espécie, porte, idade, localização e status | Obrigatória |
+| RF0005 | Filtros de Busca | Filtrar por situação, espécie, porte, idade, localização e status. **Fora de escopo** desde 2026-10-05: não será implementado | Cancelado |
 | RF0006 | Detalhes do Animal | Fotos, descrição, localização e demais informações | Obrigatória |
 | RF0007 | Upload e Captura de Imagens | Galeria ou câmera do dispositivo | Obrigatória |
 | RF0008 | Comparação Inteligente de Imagens | Enviar imagem e comparar automaticamente com as já cadastradas | Obrigatória |
@@ -221,7 +222,9 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 | Animal | idAnimal | nome(80), status(1), descricao(200), especie(40), idade?, porte(1)?, urlImagem(500)?, embedding Json? | idCidade; idInstituicao?; idUsuario?; idRaca |
 | Transacao | idTransacao | keyImageSent, keyImageCompared, dataBusca, scoreSimilarity | idAnimal → Animal |
 
-**Relacionamentos 1:N:** Cidade → Usuario, Instituicao, Animal; Instituicao → Animal (FK opcional); Usuario → Animal (FK opcional); Raca → Animal; Animal → Transacao.
+**Relacionamentos 1:N:** Cidade → Usuario, Instituicao, Animal; Instituicao → Animal (FK opcional); Usuario → Animal (FK opcional); Raca → Animal; Animal → Transacao; Animal → Notificacao (FK opcional, `ON DELETE SET NULL`); Notificacao → NotificacaoLeitura.
+
+**Notificação de cadastro (spec 015 + web 016 + mobile 017):** `POST /animais` grava, na mesma transação, uma `Notificacao` (`tipo` `ANIMAL_CADASTRADO`) visível a usuários e ONGs **exceto o autor**. Edição, foto e exclusão não geram outro aviso. Excluir o animal zera `idAnimal` e mantém o texto. Leitura é por conta (`NotificacaoLeitura`). `GET /notificacoes` (JWT `usuario` ou `ong`) devolve até 50 itens e `naoLidas`. `PATCH /notificacoes/:id/lida` e `PATCH /notificacoes/lidas` marcam leitura. Sem push, e-mail ou aviso retroativo do seed.
 
 **Tipos Prisma:** PKs `Int` autoincrement; strings com `@db.VarChar(n)`; `status`/`porte` `@db.Char(1)`; `idade` `Int?` (anos); `dataBusca` `DateTime`; `scoreSimilarity` `@db.Decimal(5, 4)`; `Transacao` keys de imagem `VarChar(200)`; foto do animal `urlImagem` `VarChar(500)?` (URL pública do Storage; blob no bucket); `Animal.embedding` `Json?` (vetor ResNet50, 2048 números; **não** sai no GET).
 
@@ -247,7 +250,7 @@ Papel JWT `usuario` | `ong` derivado do endpoint de login (sem coluna `papel` na
 
 **Seed local** (specs 004/005 + 011): `npx prisma db seed` ou `npm run prisma:seed` — 1 cidade, 1 raça, 1 usuário (`contato` `51999999999`), 1 ONG (`contato` `51888888888`), 3 animais (Thor=`A`/ONG, Luna=`P`/ONG, Mel=`E`/usuário). Credenciais dev: `usuario@adopet.local` / `ong@adopet.local` — senha `senha123`. Animais do seed **sem** foto (`urlImagem` null).
 
-**Lacunas vs RFs (próximas):** filtros avançados (RF0005).
+**Lacunas vs RFs:** nenhuma fatia funcional pendente. RF0005 (filtros avançados) ficou fora de escopo em 2026-10-05.
 
 ### 4.5 Casos de uso
 
@@ -367,7 +370,7 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 ### Fase 2 — demais funcionalidades (depois do CRUD)
 
 6. Storage Supabase (imagens)
-7. Filtros avançados, perdidos/encontrados no mobile
+7. ~~Filtros avançados~~ — cancelados (2026-10-05). Perdidos/encontrados no mobile já entregues
 8. Upload/câmera (RF0007)
 9. Serviço de IA (RF0008)
 10. Polimento + documentação para a banca
@@ -411,6 +414,8 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-28 | Ranking de `POST /animais/comparar`: até 5 candidatos com score ≥ 0,60 (antes 0,50). Web e mobile só exibem o que a API devolve | Spec 013 |
 | 2026-09-28 | Dashboard: `Animal.criadoEm`; tabela `ExclusaoAnimal` gravada na exclusão; `GET /dashboard?periodo=7d\|30d\|90d` (só ONG). Adotados = exclusões com status `A`. Web spec 015 | Spec 014 |
 | 2026-09-30 | Rótulo visível da busca por foto no mobile e no painel: **Busca por Foto**. `POST /animais/comparar` e `scoreSimilarity` permanecem | Autora |
+| 2026-10-05 | RF0005 (filtros por idade, localização e painel de filtros) fica fora de escopo. Sem spec e sem query extra em `GET /animais`. Permanecem a busca textual no mobile e, no painel, busca + espécie + porte no cliente | Autora |
+| 2026-10-05 | Notificação in-app ao cadastrar animal (A/P/E): uma linha por cadastro, oculta para o autor, leitura por conta. `GET/PATCH /notificacoes`. Painel: sino no header (web spec 016). App: sino do header (mobile spec 017). Sem push | Spec 015 |
 
 ---
 
@@ -438,7 +443,9 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 - [x] Contato do tutor no GET de animais + `contato` na ONG (API — spec 011)
 - [x] Serviço de IA local (spec 012 — `ai/` + `POST /animais/comparar`); UI mobile spec 016; UI web spec 013
 - [x] Métricas do dashboard da ONG (`GET /dashboard` — spec 014; UI web spec 015)
-- [ ] Ícone WhatsApp no detalhe (web spec 012; mobile spec 014)
+- [x] Notificações de cadastro de animal (`/notificacoes` — spec 015; UI web spec 016; UI mobile spec 017)
+- [x] Ícone WhatsApp no detalhe (web spec 012; mobile spec 014)
+- [x] Filtros avançados (RF0005) — cancelados em 2026-10-05; não implementar
 
 ---
 
@@ -476,3 +483,5 @@ Foco: **cadastro, edição e exclusão** (CRUD), com autenticação JWT.
 | 2026-09-28 | Spec 013: corte padrão da comparação sobe para 60% (`minScore` 0,6); continua o top 5 |
 | 2026-09-28 | Spec 014: métricas do dashboard (`GET /dashboard`); `criadoEm` no animal; registro de exclusão antes do delete |
 | 2026-09-30 | Aba e título no app, e menu e título no painel, passam a **Busca por Foto**. A API de comparação não muda |
+| 2026-10-05 | RF0005 cancelado: filtros avançados não serão implementados |
+| 2026-10-05 | Spec 015: notificação ao cadastrar animal; `Notificacao` + `NotificacaoLeitura`; o autor não vê o próprio aviso |

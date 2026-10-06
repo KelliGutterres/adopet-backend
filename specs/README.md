@@ -29,3 +29,4 @@ Ver `docs/CONTEXTO-PROJETO.md` (seção SDD).
 | [012](./012-servico-ia-similaridade.md) | Serviço Python ResNet50 + `POST /animais/comparar` | aprovada e implementada (UI mobile: spec 016) |
 | [013](./013-corte-similaridade-60.md) | Corte padrão da comparação em 60% (top 5) | aprovada e implementada |
 | [014](./014-dashboard-metricas.md) | Métricas do dashboard (`GET /dashboard`) | aprovada e implementada |
+| [015](./015-notificacoes-cadastro-animal.md) | Notificação ao cadastrar animal (`/notificacoes`) | aprovada e implementada |

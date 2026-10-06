@@ -13,6 +13,7 @@ const {
   gerarEmbedding,
   tentarEmbedding,
 } = require('./ai.service');
+const { registrarCadastroAnimal } = require('./notificacoes.service');
 
 const STATUS_VALIDOS = new Set(['E', 'P', 'A']);
 const ESPECIES_VALIDAS = new Set(['CAO', 'GATO']);
@@ -226,19 +227,23 @@ async function criar(body, auth) {
   const raca = await findOrCreateRaca(body.raca);
   const vinculo = vinculoDoAuth(auth);
 
-  const animal = await prisma.animal.create({
-    data: {
-      nome,
-      descricao,
-      status,
-      especie,
-      idade,
-      porte,
-      idCidade: cidade.idCidade,
-      idRaca: raca.idRaca,
-      ...vinculo,
-    },
-    include: animalInclude,
+  const animal = await prisma.$transaction(async (tx) => {
+    const criado = await tx.animal.create({
+      data: {
+        nome,
+        descricao,
+        status,
+        especie,
+        idade,
+        porte,
+        idCidade: cidade.idCidade,
+        idRaca: raca.idRaca,
+        ...vinculo,
+      },
+      include: animalInclude,
+    });
+    await registrarCadastroAnimal(tx, criado);
+    return criado;
   });
 
   return semEmbedding(animal);

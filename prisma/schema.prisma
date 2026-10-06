@@ -1,4 +1,4 @@
-// Schema alinhado à Figura 11 (MER) + auth (003) + CRUD animais (005) + unique cidade/raça (007) + urlImagem (010) + contato ONG (011) + embedding IA (012) + dashboard (014)
+// Schema alinhado à Figura 11 (MER) + auth (003) + CRUD animais (005) + unique cidade/raça (007) + urlImagem (010) + contato ONG (011) + embedding IA (012) + dashboard (014) + notificações (015)
 
 generator client {
   provider = "prisma-client-js"
@@ -75,8 +75,9 @@ model Animal {
   cidade      Cidade       @relation(fields: [idCidade], references: [idCidade])
   instituicao Instituicao? @relation(fields: [idInstituicao], references: [idInstituicao])
   usuario     Usuario?     @relation(fields: [idUsuario], references: [idUsuario])
-  raca        Raca         @relation(fields: [idRaca], references: [idRaca])
-  transacoes  Transacao[]
+  raca         Raca          @relation(fields: [idRaca], references: [idRaca])
+  transacoes   Transacao[]
+  notificacoes Notificacao[]
 
   @@index([status, criadoEm])
 }
@@ -87,6 +88,33 @@ model ExclusaoAnimal {
   excluidoEm DateTime @default(now())
 
   @@index([status, excluidoEm])
+}
+
+model Notificacao {
+  idNotificacao      Int      @id @default(autoincrement())
+  tipo               String   @db.VarChar(40)
+  titulo             String   @db.VarChar(120)
+  mensagem           String   @db.VarChar(200)
+  idAnimal           Int?
+  idUsuarioAutor     Int?
+  idInstituicaoAutor Int?
+  criadoEm           DateTime @default(now())
+
+  animal   Animal?              @relation(fields: [idAnimal], references: [idAnimal], onDelete: SetNull)
+  leituras NotificacaoLeitura[]
+
+  @@index([criadoEm])
+}
+
+model NotificacaoLeitura {
+  idNotificacao Int
+  papel         String   @db.VarChar(20)
+  idConta       Int
+  lidaEm        DateTime @default(now())
+
+  notificacao Notificacao @relation(fields: [idNotificacao], references: [idNotificacao], onDelete: Cascade)
+
+  @@id([idNotificacao, papel, idConta])
 }
 
 model Transacao {
